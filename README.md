@@ -1,5 +1,9 @@
 # tauri-macos-xcode
 
+[![npm](https://img.shields.io/npm/v/@choochmeque/tauri-macos-xcode.svg)](https://www.npmjs.com/package/@choochmeque/tauri-macos-xcode)
+[![codecov](https://codecov.io/gh/Choochmeque/tauri-macos-xcode/branch/main/graph/badge.svg)](https://codecov.io/gh/Choochmeque/tauri-macos-xcode)
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 Generate Xcode projects for macOS Tauri apps. Similar to `tauri ios init` but for macOS.
 
 ## Features
