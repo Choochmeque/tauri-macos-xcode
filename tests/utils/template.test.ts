@@ -1,5 +1,11 @@
 import { describe, it, expect } from "vitest";
-import { replaceTemplateVars } from "../../src/utils/template.js";
+import {
+  replaceTemplateVars,
+  getTemplatesDir,
+  readTemplate,
+  processTemplate,
+} from "../../src/utils/template.js";
+import fs from "fs";
 
 describe("template", () => {
   describe("replaceTemplateVars", () => {
@@ -48,6 +54,55 @@ Line 3: {{VAR1}}`;
       expect(result).toBe(`Line 1: A
 Line 2: B
 Line 3: A`);
+    });
+  });
+
+  describe("getTemplatesDir", () => {
+    it("returns a valid templates directory path", () => {
+      const templatesDir = getTemplatesDir();
+      expect(templatesDir).toContain("templates");
+      expect(fs.existsSync(templatesDir)).toBe(true);
+    });
+
+    it("templates directory contains expected files", () => {
+      const templatesDir = getTemplatesDir();
+      const files = fs.readdirSync(templatesDir);
+      expect(files).toContain("project.yml.template");
+      expect(files).toContain("Info.plist.template");
+    });
+  });
+
+  describe("readTemplate", () => {
+    it("reads project.yml.template", () => {
+      const content = readTemplate("project.yml.template");
+      expect(content).toContain("{{PRODUCT_NAME}}");
+      expect(content).toContain("{{BUNDLE_IDENTIFIER}}");
+    });
+
+    it("reads Info.plist.template", () => {
+      const content = readTemplate("Info.plist.template");
+      expect(content).toContain("{{VERSION}}");
+      expect(content).toContain("CFBundleName");
+    });
+
+    it("throws for non-existent template", () => {
+      expect(() => readTemplate("non-existent.template")).toThrow();
+    });
+  });
+
+  describe("processTemplate", () => {
+    it("reads and processes template with variables", () => {
+      const vars = {
+        PRODUCT_NAME: "TestApp",
+        BUNDLE_IDENTIFIER: "com.test.app",
+        BUNDLE_ID_PREFIX: "com.test",
+        VERSION: "1.0.0",
+        MACOS_DEPLOYMENT_TARGET: "11.0",
+      };
+      const content = processTemplate("project.yml.template", vars);
+      expect(content).toContain("TestApp");
+      expect(content).toContain("com.test.app");
+      expect(content).not.toContain("{{PRODUCT_NAME}}");
     });
   });
 });
