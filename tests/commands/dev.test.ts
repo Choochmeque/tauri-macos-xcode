@@ -106,7 +106,7 @@ describe("dev command", () => {
     const mockSpawn = vi.mocked(childProcess.spawn);
 
     // Don't await since it hangs forever when dev command is present
-    const devPromise = dev({ path: tempDir, open: false });
+    dev({ path: tempDir, open: false });
 
     // Give it a tick to start
     await new Promise((r) => setTimeout(r, 10));
