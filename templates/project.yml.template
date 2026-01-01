@@ -1,0 +1,48 @@
+name: {{PRODUCT_NAME}}
+options:
+  bundleIdPrefix: {{BUNDLE_ID_PREFIX}}
+  deploymentTarget:
+    macOS: "{{MACOS_DEPLOYMENT_TARGET}}"
+fileGroups: [../../src]
+configs:
+  debug: debug
+  release: release
+settingGroups:
+  app:
+    base:
+      PRODUCT_NAME: {{PRODUCT_NAME}}
+      PRODUCT_BUNDLE_IDENTIFIER: {{BUNDLE_IDENTIFIER}}
+targets:
+  {{PRODUCT_NAME}}_macOS:
+    type: application
+    platform: macOS
+    sources:
+      - path: Assets.xcassets
+      - path: {{PRODUCT_NAME}}_macOS
+    info:
+      path: {{PRODUCT_NAME}}_macOS/Info.plist
+      properties:
+        CFBundleShortVersionString: {{VERSION}}
+        CFBundleVersion: {{VERSION}}
+        LSMinimumSystemVersion: "{{MACOS_DEPLOYMENT_TARGET}}"
+        NSHighResolutionCapable: true
+    entitlements:
+      path: {{PRODUCT_NAME}}_macOS/{{PRODUCT_NAME}}_macOS.entitlements
+    settings:
+      base:
+        ARCHS: [arm64, x86_64]
+        VALID_ARCHS: [arm64, x86_64]
+        CODE_SIGN_ALLOW_ENTITLEMENTS_MODIFICATION: YES
+      groups: [app]
+    dependencies:
+      - sdk: AppKit.framework
+      - sdk: CoreGraphics.framework
+      - sdk: Metal.framework
+      - sdk: MetalKit.framework
+      - sdk: QuartzCore.framework
+      - sdk: Security.framework
+      - sdk: WebKit.framework
+    postCompileScripts:
+      - script: ${PROJECT_DIR}/scripts/build-rust.sh ${CONFIGURATION} "${ARCHS}"
+        name: Build and Copy Rust Binary
+        basedOnDependencyAnalysis: false

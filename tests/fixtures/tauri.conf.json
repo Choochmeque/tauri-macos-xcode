@@ -1,0 +1,8 @@
+{
+  "productName": "test-app",
+  "identifier": "com.test.app",
+  "version": "1.0.0",
+  "build": {
+    "beforeDevCommand": "pnpm dev"
+  }
+}
