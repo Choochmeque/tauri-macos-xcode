@@ -36,7 +36,13 @@ This will:
 ### 2. Start development
 
 ```bash
+npm run tauri:macos:dev
+# or
+yarn tauri:macos:dev
+# or
 pnpm tauri:macos:dev
+# or
+bun tauri:macos:dev
 ```
 
 This starts the frontend dev server and opens Xcode. Then press Cmd+R in Xcode to build and run.
@@ -119,10 +125,6 @@ brew install xcodegen
 ### Cargo not found during Xcode build
 
 The build script sources `~/.cargo/env`. Make sure Rust is installed via rustup.
-
-### App crashes on launch
-
-Make sure your dev server is running before launching from Xcode. The app needs to connect to the frontend at the URL specified in `tauri.conf.json`.
 
 ## License
 
