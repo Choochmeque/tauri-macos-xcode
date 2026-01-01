@@ -1,4 +1,4 @@
-# @choochmeque/tauri-macos-xcode
+# tauri-macos-xcode
 
 Generate Xcode projects for macOS Tauri apps. Similar to `tauri ios init` but for macOS.
 
@@ -122,4 +122,4 @@ Make sure your dev server is running before launching from Xcode. The app needs 
 
 ## License
 
-MIT
+[MIT](LICENSE)
