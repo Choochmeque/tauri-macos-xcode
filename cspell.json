@@ -39,7 +39,11 @@
     "AUMID",
     "xcodegen",
     "sharekit",
-    "xcodeproj"
+    "xcodeproj",
+    "Podfile",
+    "xcassets",
+    "appiconset",
+    "rustup"
   ],
   "useGitignore": true,
   "ignorePaths": [
