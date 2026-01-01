@@ -14,10 +14,20 @@ export function replaceTemplateVars(
   });
 }
 
+function findPackageRoot(startDir: string): string {
+  let dir = startDir;
+  while (dir !== path.dirname(dir)) {
+    if (fs.existsSync(path.join(dir, "package.json"))) {
+      return dir;
+    }
+    dir = path.dirname(dir);
+  }
+  throw new Error("Could not find package root");
+}
+
 export function getTemplatesDir(): string {
-  // In development: src/utils -> src -> tauri-macos-xcode -> templates
-  // In production: dist/utils -> dist -> tauri-macos-xcode -> templates
-  return path.resolve(__dirname, "..", "..", "templates");
+  const packageRoot = findPackageRoot(__dirname);
+  return path.join(packageRoot, "templates");
 }
 
 export function readTemplate(templateName: string): string {
