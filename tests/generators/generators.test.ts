@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import fs from "fs";
 import path from "path";
 import os from "os";
-import { execSync } from "child_process";
+import { Jimp } from "jimp";
 import { AppInfo } from "../../src/types.js";
 import { generateProjectYml } from "../../src/generators/project-yml.js";
 import { generateInfoPlist } from "../../src/generators/info-plist.js";
@@ -12,28 +12,12 @@ import { generatePodfile } from "../../src/generators/podfile.js";
 import { generateSources } from "../../src/generators/sources.js";
 import { generateAssets } from "../../src/generators/assets.js";
 
-// Minimal valid PNG (1x1 red pixel)
-const MINIMAL_PNG = Buffer.from([
-  0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d, 0x49,
-  0x48, 0x44, 0x52, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x08, 0x02,
-  0x00, 0x00, 0x00, 0x90, 0x77, 0x53, 0xde, 0x00, 0x00, 0x00, 0x0c, 0x49, 0x44,
-  0x41, 0x54, 0x08, 0xd7, 0x63, 0xf8, 0xcf, 0xc0, 0x00, 0x00, 0x00, 0x03, 0x00,
-  0x01, 0x00, 0x05, 0xfe, 0xd4, 0xef, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4e,
-  0x44, 0xae, 0x42, 0x60, 0x82,
-]);
-
-function createTestPng(filePath: string, size: number = 512): void {
-  const tempPng = `${filePath}.tmp`;
-  fs.writeFileSync(tempPng, MINIMAL_PNG);
-  try {
-    execSync(`sips -z ${size} ${size} "${tempPng}" --out "${filePath}"`, {
-      stdio: "pipe",
-    });
-  } finally {
-    if (fs.existsSync(tempPng)) {
-      fs.unlinkSync(tempPng);
-    }
-  }
+async function createTestPng(
+  filePath: string,
+  size: number = 512,
+): Promise<void> {
+  const image = new Jimp({ width: size, height: size, color: 0xff0000ff });
+  await image.write(filePath as `${string}.${string}`);
 }
 
 describe("generators", () => {
@@ -239,7 +223,7 @@ describe("generators", () => {
       const iconsDir = path.join(tempDir, "src-tauri", "icons");
       fs.mkdirSync(iconsDir, { recursive: true });
 
-      createTestPng(path.join(iconsDir, "icon.png"), 512);
+      await createTestPng(path.join(iconsDir, "icon.png"), 512);
 
       const macosDir = path.join(tempDir, "macos");
       fs.mkdirSync(macosDir, { recursive: true });
@@ -265,7 +249,7 @@ describe("generators", () => {
       const iconsDir = path.join(tempDir, "src-tauri", "icons");
       fs.mkdirSync(iconsDir, { recursive: true });
 
-      createTestPng(path.join(iconsDir, "128x128@2x.png"), 256);
+      await createTestPng(path.join(iconsDir, "128x128@2x.png"), 256);
 
       const macosDir = path.join(tempDir, "macos");
       fs.mkdirSync(macosDir, { recursive: true });
@@ -284,7 +268,7 @@ describe("generators", () => {
       const iconsDir = path.join(tempDir, "src-tauri", "icons");
       fs.mkdirSync(iconsDir, { recursive: true });
 
-      // Create an invalid PNG file that sips cannot process
+      // Create an invalid PNG file that jimp cannot process
       fs.writeFileSync(
         path.join(iconsDir, "icon.png"),
         "not a valid png file content",

@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { execSync } from "child_process";
+import { Jimp } from "jimp";
 import { AppInfo } from "../types.js";
 
 // macOS icon sizes
@@ -88,16 +88,16 @@ export async function generateAssets(
     console.log("  Generating app icons from", path.basename(sourceIcon));
 
     try {
+      const image = await Jimp.read(sourceIcon);
+
       for (const { size, scale } of ICON_SIZES) {
         const actualSize = size * scale;
         const filename = `icon_${size}x${size}${scale > 1 ? `@${scale}x` : ""}.png`;
         const outputPath = path.join(iconsetDir, filename);
 
-        // Use macOS sips command to resize the icon
-        execSync(
-          `sips -z ${actualSize} ${actualSize} "${sourceIcon}" --out "${outputPath}"`,
-          { stdio: "pipe" },
-        );
+        // Clone and resize the image
+        const resized = image.clone().resize({ w: actualSize, h: actualSize });
+        await resized.write(outputPath as `${string}.${string}`);
       }
       console.log("  Created Assets.xcassets with icons");
     } catch (error) {
