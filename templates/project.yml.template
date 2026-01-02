@@ -46,3 +46,17 @@ targets:
       - script: ${PROJECT_DIR}/scripts/build-rust.sh ${CONFIGURATION} "${ARCHS}"
         name: Build and Copy Rust Binary
         basedOnDependencyAnalysis: false
+
+schemes:
+  {{PRODUCT_NAME}}_macOS:
+    build:
+      targets:
+        {{PRODUCT_NAME}}_macOS: all
+    run:
+      config: debug
+    profile:
+      config: release
+    analyze:
+      config: debug
+    archive:
+      config: release

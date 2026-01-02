@@ -37,8 +37,7 @@
     "url": "https://github.com/Choochmeque/tauri-macos-xcode"
   },
   "dependencies": {
-    "commander": "^14.0.2",
-    "sharp": "^0.34.5"
+    "commander": "^14.0.2"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",

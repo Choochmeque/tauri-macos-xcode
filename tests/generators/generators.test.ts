@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import fs from "fs";
 import path from "path";
 import os from "os";
+import { execSync } from "child_process";
 import { AppInfo } from "../../src/types.js";
 import { generateProjectYml } from "../../src/generators/project-yml.js";
 import { generateInfoPlist } from "../../src/generators/info-plist.js";
@@ -10,6 +11,30 @@ import { generateBuildScript } from "../../src/generators/build-script.js";
 import { generatePodfile } from "../../src/generators/podfile.js";
 import { generateSources } from "../../src/generators/sources.js";
 import { generateAssets } from "../../src/generators/assets.js";
+
+// Minimal valid PNG (1x1 red pixel)
+const MINIMAL_PNG = Buffer.from([
+  0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d, 0x49,
+  0x48, 0x44, 0x52, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x01, 0x08, 0x02,
+  0x00, 0x00, 0x00, 0x90, 0x77, 0x53, 0xde, 0x00, 0x00, 0x00, 0x0c, 0x49, 0x44,
+  0x41, 0x54, 0x08, 0xd7, 0x63, 0xf8, 0xcf, 0xc0, 0x00, 0x00, 0x00, 0x03, 0x00,
+  0x01, 0x00, 0x05, 0xfe, 0xd4, 0xef, 0x00, 0x00, 0x00, 0x00, 0x49, 0x45, 0x4e,
+  0x44, 0xae, 0x42, 0x60, 0x82,
+]);
+
+function createTestPng(filePath: string, size: number = 512): void {
+  const tempPng = `${filePath}.tmp`;
+  fs.writeFileSync(tempPng, MINIMAL_PNG);
+  try {
+    execSync(`sips -z ${size} ${size} "${tempPng}" --out "${filePath}"`, {
+      stdio: "pipe",
+    });
+  } finally {
+    if (fs.existsSync(tempPng)) {
+      fs.unlinkSync(tempPng);
+    }
+  }
+}
 
 describe("generators", () => {
   let tempDir: string;
@@ -211,30 +236,16 @@ describe("generators", () => {
     });
 
     it("generates icons from source icon.png", async () => {
-      // Create a fake Tauri project structure with an icon
       const iconsDir = path.join(tempDir, "src-tauri", "icons");
       fs.mkdirSync(iconsDir, { recursive: true });
 
-      // Create a simple 512x512 PNG using sharp
-      const sharp = await import("sharp");
-      await sharp
-        .default({
-          create: {
-            width: 512,
-            height: 512,
-            channels: 4,
-            background: { r: 255, g: 0, b: 0, alpha: 1 },
-          },
-        })
-        .png()
-        .toFile(path.join(iconsDir, "icon.png"));
+      createTestPng(path.join(iconsDir, "icon.png"), 512);
 
       const macosDir = path.join(tempDir, "macos");
       fs.mkdirSync(macosDir, { recursive: true });
 
       await generateAssets(macosDir, mockAppInfo, tempDir);
 
-      // Check that icon files were generated
       const iconsetDir = path.join(
         macosDir,
         "Assets.xcassets",
@@ -250,52 +261,11 @@ describe("generators", () => {
       );
     });
 
-    it("finds 512x512.png as fallback source icon", async () => {
-      const iconsDir = path.join(tempDir, "src-tauri", "icons");
-      fs.mkdirSync(iconsDir, { recursive: true });
-
-      const sharp = await import("sharp");
-      await sharp
-        .default({
-          create: {
-            width: 512,
-            height: 512,
-            channels: 4,
-            background: { r: 0, g: 255, b: 0, alpha: 1 },
-          },
-        })
-        .png()
-        .toFile(path.join(iconsDir, "512x512.png"));
-
-      const macosDir = path.join(tempDir, "macos");
-      fs.mkdirSync(macosDir, { recursive: true });
-
-      await generateAssets(macosDir, mockAppInfo, tempDir);
-
-      const iconsetDir = path.join(
-        macosDir,
-        "Assets.xcassets",
-        "AppIcon.appiconset",
-      );
-      expect(fs.existsSync(path.join(iconsetDir, "icon_16x16.png"))).toBe(true);
-    });
-
     it("finds 128x128@2x.png as fallback source icon", async () => {
       const iconsDir = path.join(tempDir, "src-tauri", "icons");
       fs.mkdirSync(iconsDir, { recursive: true });
 
-      const sharp = await import("sharp");
-      await sharp
-        .default({
-          create: {
-            width: 256,
-            height: 256,
-            channels: 4,
-            background: { r: 0, g: 0, b: 255, alpha: 1 },
-          },
-        })
-        .png()
-        .toFile(path.join(iconsDir, "128x128@2x.png"));
+      createTestPng(path.join(iconsDir, "128x128@2x.png"), 256);
 
       const macosDir = path.join(tempDir, "macos");
       fs.mkdirSync(macosDir, { recursive: true });
@@ -314,7 +284,7 @@ describe("generators", () => {
       const iconsDir = path.join(tempDir, "src-tauri", "icons");
       fs.mkdirSync(iconsDir, { recursive: true });
 
-      // Create an invalid PNG file that sharp cannot process
+      // Create an invalid PNG file that sips cannot process
       fs.writeFileSync(
         path.join(iconsDir, "icon.png"),
         "not a valid png file content",

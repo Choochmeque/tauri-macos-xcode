@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import sharp from "sharp";
+import { execSync } from "child_process";
 import { AppInfo } from "../types.js";
 
 // macOS icon sizes
@@ -41,8 +41,8 @@ function generateContentsJson(): string {
 function findSourceIcon(projectRoot: string): string | null {
   const possiblePaths = [
     path.join(projectRoot, "src-tauri", "icons", "icon.png"),
-    path.join(projectRoot, "src-tauri", "icons", "512x512.png"),
     path.join(projectRoot, "src-tauri", "icons", "128x128@2x.png"),
+    path.join(projectRoot, "src-tauri", "icons", "128x128.png"),
   ];
 
   for (const iconPath of possiblePaths) {
@@ -93,13 +93,11 @@ export async function generateAssets(
         const filename = `icon_${size}x${size}${scale > 1 ? `@${scale}x` : ""}.png`;
         const outputPath = path.join(iconsetDir, filename);
 
-        await sharp(sourceIcon)
-          .resize(actualSize, actualSize, {
-            fit: "contain",
-            background: { r: 0, g: 0, b: 0, alpha: 0 },
-          })
-          .png()
-          .toFile(outputPath);
+        // Use macOS sips command to resize the icon
+        execSync(
+          `sips -z ${actualSize} ${actualSize} "${sourceIcon}" --out "${outputPath}"`,
+          { stdio: "pipe" },
+        );
       }
       console.log("  Created Assets.xcassets with icons");
     } catch (error) {
