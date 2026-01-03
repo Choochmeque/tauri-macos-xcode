@@ -53,6 +53,8 @@ echo "Found binary: $BINARY_PATH"
 
 # Copy binary to Xcode's expected location
 mkdir -p "${BUILT_PRODUCTS_DIR}/${EXECUTABLE_FOLDER_PATH}"
+# Remove old binary first to avoid launch services caching issues
+rm -f "${BUILT_PRODUCTS_DIR}/${EXECUTABLE_PATH}"
 cp "$BINARY_PATH" "${BUILT_PRODUCTS_DIR}/${EXECUTABLE_PATH}"
 
 echo "Rust build complete - binary copied to ${BUILT_PRODUCTS_DIR}/${EXECUTABLE_PATH}"
