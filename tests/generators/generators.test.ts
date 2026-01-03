@@ -9,7 +9,6 @@ import { generateInfoPlist } from "../../src/generators/info-plist.js";
 import { generateEntitlements } from "../../src/generators/entitlements.js";
 import { generateBuildScript } from "../../src/generators/build-script.js";
 import { generatePodfile } from "../../src/generators/podfile.js";
-import { generateSources } from "../../src/generators/sources.js";
 import { generateAssets } from "../../src/generators/assets.js";
 
 async function createTestPng(
@@ -140,33 +139,6 @@ describe("generators", () => {
       generatePodfile(tempDir, mockAppInfo);
       const content = fs.readFileSync(path.join(tempDir, "Podfile"), "utf8");
       expect(content).toContain("TestApp");
-    });
-  });
-
-  describe("generateSources", () => {
-    it("creates main.mm file", () => {
-      generateSources(tempDir, mockAppInfo);
-      const filePath = path.join(tempDir, "Sources", "TestApp", "main.mm");
-      expect(fs.existsSync(filePath)).toBe(true);
-    });
-
-    it("creates bindings.h file", () => {
-      generateSources(tempDir, mockAppInfo);
-      const filePath = path.join(
-        tempDir,
-        "Sources",
-        "TestApp",
-        "bindings",
-        "bindings.h",
-      );
-      expect(fs.existsSync(filePath)).toBe(true);
-    });
-
-    it("creates directory structure", () => {
-      generateSources(tempDir, mockAppInfo);
-      expect(
-        fs.existsSync(path.join(tempDir, "Sources", "TestApp", "bindings")),
-      ).toBe(true);
     });
   });
 

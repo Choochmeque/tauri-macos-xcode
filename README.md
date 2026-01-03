@@ -113,6 +113,21 @@ Required sizes:
 - 256x256, 256x256@2x
 - 512x512, 512x512@2x
 
+## Debugging Rust Code
+
+To debug Rust code in Xcode, use symbolic breakpoints:
+
+1. Go to **Debug → Breakpoints → Create Symbolic Breakpoint**
+2. Enter a function name (e.g., `my_function` or `my_module::my_function`)
+3. Build and run with Cmd+R
+
+You can also use LLDB commands in the debug console:
+```
+breakpoint set -f main.rs -l 10
+```
+
+Note: Clicking in the gutter doesn't work for `.rs` files since Xcode doesn't natively support Rust. Use symbolic breakpoints or LLDB commands instead.
+
 ## Troubleshooting
 
 ### XcodeGen not found

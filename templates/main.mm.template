@@ -1,8 +1,0 @@
-#include "bindings/bindings.h"
-
-int main(int argc, char * argv[]) {
-    @autoreleasepool {
-        ffi::start_app();
-    }
-    return 0;
-}
