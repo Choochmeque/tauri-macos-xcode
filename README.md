@@ -101,8 +101,8 @@ The tool reads configuration from your `tauri.conf.json`:
 
 Icons are automatically generated from your Tauri icons during `init`. The tool looks for:
 - `src-tauri/icons/icon.png`
-- `src-tauri/icons/512x512.png`
 - `src-tauri/icons/128x128@2x.png`
+- `src-tauri/icons/128x128.png`
 
 If no source icon is found, you can manually add icons to `src-tauri/gen/apple-macos/Assets.xcassets/AppIcon.appiconset/`.
 
