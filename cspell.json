@@ -43,7 +43,8 @@
     "Podfile",
     "xcassets",
     "appiconset",
-    "rustup"
+    "rustup",
+    "LLDB"
   ],
   "useGitignore": true,
   "ignorePaths": [
