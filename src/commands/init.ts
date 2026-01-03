@@ -4,6 +4,7 @@ import {
   findProjectRoot,
   readTauriConfig,
   getAppInfo,
+  detectPackageManager,
 } from "../core/project-discovery.js";
 import { generateProjectYml } from "../generators/project-yml.js";
 import { generateInfoPlist } from "../generators/info-plist.js";
@@ -80,7 +81,9 @@ export async function init(options: InitOptions): Promise<void> {
   console.log("");
   console.log("macOS Xcode project created successfully!");
   console.log("");
+
+  const pm = detectPackageManager(projectRoot);
   console.log("Next steps:");
-  console.log("  1. Run: pnpm install");
-  console.log("  2. Run: pnpm tauri:macos:dev");
+  console.log(`  1. Run: ${pm} install`);
+  console.log(`  2. Run: ${pm} tauri:macos:dev`);
 }

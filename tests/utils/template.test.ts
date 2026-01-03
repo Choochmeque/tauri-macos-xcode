@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import {
   replaceTemplateVars,
   getTemplatesDir,
@@ -69,6 +69,25 @@ Line 3: A`);
       const files = fs.readdirSync(templatesDir);
       expect(files).toContain("project.yml.template");
       expect(files).toContain("Info.plist.template");
+    });
+
+    it("throws when package root not found", async () => {
+      const originalExistsSync = fs.existsSync;
+      vi.spyOn(fs, "existsSync").mockImplementation((p) => {
+        if (String(p).endsWith("package.json")) return false;
+        return originalExistsSync(p);
+      });
+
+      // Re-import to get fresh module with mocked fs
+      vi.resetModules();
+      const { getTemplatesDir: freshGetTemplatesDir } =
+        await import("../../src/utils/template.js");
+
+      expect(() => freshGetTemplatesDir()).toThrow(
+        "Could not find package root",
+      );
+
+      vi.restoreAllMocks();
     });
   });
 

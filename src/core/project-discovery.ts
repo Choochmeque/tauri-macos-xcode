@@ -35,3 +35,32 @@ export function getAppInfo(config: TauriConfig): AppInfo {
     macosDeploymentTarget: "11.0",
   };
 }
+
+export type PackageManager = "npm" | "yarn" | "pnpm" | "bun";
+
+export function detectPackageManager(projectRoot: string): PackageManager {
+  // Check packageManager field in package.json first
+  const pkgPath = path.join(projectRoot, "package.json");
+  if (fs.existsSync(pkgPath)) {
+    try {
+      const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf8"));
+      if (pkg.packageManager) {
+        if (pkg.packageManager.startsWith("pnpm")) return "pnpm";
+        if (pkg.packageManager.startsWith("yarn")) return "yarn";
+        if (pkg.packageManager.startsWith("bun")) return "bun";
+        if (pkg.packageManager.startsWith("npm")) return "npm";
+      }
+    } catch {
+      // Ignore parse errors
+    }
+  }
+
+  // Fall back to lock file detection with priority
+  if (fs.existsSync(path.join(projectRoot, "pnpm-lock.yaml"))) return "pnpm";
+  if (fs.existsSync(path.join(projectRoot, "yarn.lock"))) return "yarn";
+  if (fs.existsSync(path.join(projectRoot, "bun.lockb"))) return "bun";
+  if (fs.existsSync(path.join(projectRoot, "package-lock.json"))) return "npm";
+
+  // Default to npm
+  return "npm";
+}

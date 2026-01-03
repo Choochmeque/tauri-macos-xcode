@@ -246,4 +246,18 @@ describe("dev command", () => {
 
     expect(mockKill).toHaveBeenCalled();
   });
+
+  it("finds project root when path not provided", async () => {
+    createTauriProject(tempDir, { build: {} });
+
+    const originalCwd = process.cwd();
+    process.chdir(tempDir);
+
+    try {
+      await dev({ open: false });
+      // Should complete without error since no devCommand
+    } finally {
+      process.chdir(originalCwd);
+    }
+  });
 });

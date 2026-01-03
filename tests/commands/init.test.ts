@@ -215,4 +215,20 @@ describe("init command", () => {
     const macosDir = path.join(tempDir, "src-tauri", "gen", "apple-macos");
     expect(fs.existsSync(path.join(macosDir, "TauriApp_macOS"))).toBe(true);
   });
+
+  it("finds project root when path not provided", async () => {
+    createTauriProject(tempDir);
+
+    const originalCwd = process.cwd();
+    process.chdir(tempDir);
+
+    try {
+      await init({});
+
+      const macosDir = path.join(tempDir, "src-tauri", "gen", "apple-macos");
+      expect(fs.existsSync(macosDir)).toBe(true);
+    } finally {
+      process.chdir(originalCwd);
+    }
+  });
 });

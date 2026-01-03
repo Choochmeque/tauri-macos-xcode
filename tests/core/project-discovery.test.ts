@@ -3,6 +3,7 @@ import {
   findProjectRoot,
   readTauriConfig,
   getAppInfo,
+  detectPackageManager,
 } from "../../src/core/project-discovery.js";
 import fs from "fs";
 import path from "path";
@@ -90,6 +91,86 @@ describe("project-discovery", () => {
       expect(info.identifier).toBe("com.example.app");
       expect(info.bundleIdPrefix).toBe("com.example");
       expect(info.version).toBe("0.1.0");
+    });
+  });
+
+  describe("detectPackageManager", () => {
+    it("detects pnpm from lock file", () => {
+      fs.writeFileSync(path.join(tempDir, "pnpm-lock.yaml"), "");
+      expect(detectPackageManager(tempDir)).toBe("pnpm");
+    });
+
+    it("detects yarn from lock file", () => {
+      fs.writeFileSync(path.join(tempDir, "yarn.lock"), "");
+      expect(detectPackageManager(tempDir)).toBe("yarn");
+    });
+
+    it("detects bun from lock file", () => {
+      fs.writeFileSync(path.join(tempDir, "bun.lockb"), "");
+      expect(detectPackageManager(tempDir)).toBe("bun");
+    });
+
+    it("detects npm from lock file", () => {
+      fs.writeFileSync(path.join(tempDir, "package-lock.json"), "{}");
+      expect(detectPackageManager(tempDir)).toBe("npm");
+    });
+
+    it("prioritizes pnpm over other lock files", () => {
+      fs.writeFileSync(path.join(tempDir, "pnpm-lock.yaml"), "");
+      fs.writeFileSync(path.join(tempDir, "yarn.lock"), "");
+      fs.writeFileSync(path.join(tempDir, "package-lock.json"), "{}");
+      expect(detectPackageManager(tempDir)).toBe("pnpm");
+    });
+
+    it("detects pnpm from packageManager field", () => {
+      fs.writeFileSync(
+        path.join(tempDir, "package.json"),
+        JSON.stringify({ packageManager: "pnpm@8.0.0" }),
+      );
+      expect(detectPackageManager(tempDir)).toBe("pnpm");
+    });
+
+    it("detects yarn from packageManager field", () => {
+      fs.writeFileSync(
+        path.join(tempDir, "package.json"),
+        JSON.stringify({ packageManager: "yarn@4.0.0" }),
+      );
+      expect(detectPackageManager(tempDir)).toBe("yarn");
+    });
+
+    it("detects bun from packageManager field", () => {
+      fs.writeFileSync(
+        path.join(tempDir, "package.json"),
+        JSON.stringify({ packageManager: "bun@1.0.0" }),
+      );
+      expect(detectPackageManager(tempDir)).toBe("bun");
+    });
+
+    it("detects npm from packageManager field", () => {
+      fs.writeFileSync(
+        path.join(tempDir, "package.json"),
+        JSON.stringify({ packageManager: "npm@10.0.0" }),
+      );
+      expect(detectPackageManager(tempDir)).toBe("npm");
+    });
+
+    it("handles invalid JSON in package.json gracefully", () => {
+      fs.writeFileSync(path.join(tempDir, "package.json"), "not valid json");
+      fs.writeFileSync(path.join(tempDir, "yarn.lock"), "");
+      expect(detectPackageManager(tempDir)).toBe("yarn");
+    });
+
+    it("packageManager field takes priority over lock files", () => {
+      fs.writeFileSync(
+        path.join(tempDir, "package.json"),
+        JSON.stringify({ packageManager: "yarn@4.0.0" }),
+      );
+      fs.writeFileSync(path.join(tempDir, "pnpm-lock.yaml"), "");
+      expect(detectPackageManager(tempDir)).toBe("yarn");
+    });
+
+    it("defaults to npm when no lock file found", () => {
+      expect(detectPackageManager(tempDir)).toBe("npm");
     });
   });
 });
