@@ -1,13 +1,17 @@
 import { Command } from "commander";
+import { createRequire } from "module";
 import { init } from "./commands/init.js";
 import { dev } from "./commands/dev.js";
+
+const require = createRequire(import.meta.url);
+const { version } = require("../package.json");
 
 const program = new Command();
 
 program
   .name("tauri-macos-xcode")
   .description("Generate Xcode project for macOS Tauri apps")
-  .version("0.1.0");
+  .version(version);
 
 program
   .command("init")
