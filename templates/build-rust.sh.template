@@ -18,6 +18,10 @@ else
     CARGO_PROFILE_FLAG=""
 fi
 
+# Use Xcode's DerivedData for Cargo target directory
+# This allows Xcode's "Clean Build Folder" to also clean Rust builds
+export CARGO_TARGET_DIR="${BUILD_DIR}/cargo-target"
+
 # Navigate to Tauri src directory
 cd "${PROJECT_DIR}/../.."
 
@@ -42,7 +46,7 @@ cargo build --target $TARGET $CARGO_PROFILE_FLAG
 
 # Find the binary (same name as the package)
 BINARY_NAME=$(grep -m1 'name = ' Cargo.toml | sed 's/name = "\(.*\)"/\1/')
-BINARY_PATH="target/$TARGET/$PROFILE/$BINARY_NAME"
+BINARY_PATH="${CARGO_TARGET_DIR}/$TARGET/$PROFILE/$BINARY_NAME"
 
 if [ ! -f "$BINARY_PATH" ]; then
     echo "Error: Binary not found at $BINARY_PATH"
