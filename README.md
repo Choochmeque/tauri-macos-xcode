@@ -18,6 +18,7 @@ Generate Xcode projects for macOS Tauri apps. Similar to `tauri ios init` but fo
 - [XcodeGen](https://github.com/yonaskolb/XcodeGen) - `brew install xcodegen`
 - Xcode
 - A Tauri v2 project
+- [tauri-cli](https://tauri.app/start/prerequisites/#rust) - `cargo install tauri-cli` (required for Archive/Release builds)
 
 ## Usage
 
@@ -64,10 +65,14 @@ src-tauri/gen/apple-macos/
 
 ## How it works
 
-1. The Xcode project uses a build script that compiles your Rust code with `cargo build`
-2. The compiled binary is copied into the app bundle
-3. Xcode handles code signing and app bundle creation
-4. The app connects to your frontend dev server (configured in `tauri.conf.json`)
+**Debug builds** (Cmd+R):
+1. Xcode runs a build script that compiles Rust code with `cargo build`
+2. The app connects to your frontend dev server (configured in `tauri.conf.json`)
+
+**Release/Archive builds** (Product → Archive):
+1. Xcode runs `cargo tauri build --no-bundle` which builds frontend and embeds it into the binary
+2. The app is self-contained and doesn't need a dev server
+3. Ready for distribution via App Store or direct download
 
 ## Commands
 

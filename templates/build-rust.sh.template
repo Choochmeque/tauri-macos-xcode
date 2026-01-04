@@ -43,7 +43,21 @@ case $ARCH in
 esac
 
 echo "Building $PROFILE for $TARGET..."
-cargo build --target $TARGET $CARGO_PROFILE_FLAG
+
+if [ "$PROFILE" == "release" ]; then
+    # For release builds (including Archive), use Tauri CLI to build with embedded frontend
+    # This runs beforeBuildCommand from tauri.conf.json and embeds frontend assets
+    if ! command -v cargo-tauri &> /dev/null && ! cargo tauri --version &> /dev/null; then
+        echo "Error: tauri-cli is required for release builds."
+        echo "Install it with: cargo install tauri-cli"
+        exit 1
+    fi
+    echo "Release build: using Tauri CLI to bundle frontend assets..."
+    cargo tauri build --no-bundle --target $TARGET
+else
+    # For debug builds, use cargo directly (frontend served by dev server)
+    cargo build --target $TARGET $CARGO_PROFILE_FLAG
+fi
 
 # Find the binary (same name as the package)
 BINARY_NAME=$(grep -m1 'name = ' Cargo.toml | sed 's/name = "\(.*\)"/\1/')
