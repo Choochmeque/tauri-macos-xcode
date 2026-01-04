@@ -9,8 +9,9 @@ fi
 CONFIGURATION=$1
 ARCHS=$2
 
-# Determine Cargo profile
-if [ "$CONFIGURATION" == "Release" ]; then
+# Determine Cargo profile (case-insensitive check for Release/release)
+CONFIGURATION_LOWER=$(echo "$CONFIGURATION" | tr '[:upper:]' '[:lower:]')
+if [ "$CONFIGURATION_LOWER" == "release" ]; then
     PROFILE="release"
     CARGO_PROFILE_FLAG="--release"
 else
@@ -41,7 +42,7 @@ case $ARCH in
         ;;
 esac
 
-echo "Building for $TARGET..."
+echo "Building $PROFILE for $TARGET..."
 cargo build --target $TARGET $CARGO_PROFILE_FLAG
 
 # Find the binary (same name as the package)
