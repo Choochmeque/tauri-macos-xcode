@@ -58,7 +58,8 @@ src-tauri/gen/apple-macos/
 │   └── <app>_macOS.entitlements
 ├── Assets.xcassets/         # App icons (auto-generated from src-tauri/icons/)
 ├── scripts/
-│   └── build-rust.sh        # Builds Rust code during Xcode build
+│   ├── build-rust.sh        # Bash wrapper for build script
+│   └── build.swift          # Swift build script with Xcode diagnostics
 ├── Podfile                  # CocoaPods (if needed)
 └── .gitignore
 ```

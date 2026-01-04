@@ -69,6 +69,8 @@ Line 3: A`);
       const files = fs.readdirSync(templatesDir);
       expect(files).toContain("project.yml.template");
       expect(files).toContain("Info.plist.template");
+      expect(files).toContain("build-rust.sh.template");
+      expect(files).toContain("build.swift.template");
     });
 
     it("throws when package root not found", async () => {
