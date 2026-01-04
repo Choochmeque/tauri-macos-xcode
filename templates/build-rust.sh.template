@@ -26,54 +26,91 @@ export CARGO_TARGET_DIR="${BUILD_DIR}/cargo-target"
 # Navigate to Tauri src directory
 cd "${PROJECT_DIR}/../.."
 
-# Get the first architecture (for now, build for the active arch)
-ARCH=$(echo $ARCHS | awk '{print $1}')
+# Find the binary name (same name as the package)
+BINARY_NAME=$(grep -m1 'name = ' Cargo.toml | sed 's/name = "\(.*\)"/\1/')
 
-case $ARCH in
-    arm64)
-        TARGET="aarch64-apple-darwin"
-        ;;
-    x86_64)
-        TARGET="x86_64-apple-darwin"
-        ;;
-    *)
-        echo "Unknown architecture: $ARCH"
-        exit 1
-        ;;
-esac
+# Convert Xcode arch names to Rust targets
+arch_to_target() {
+    case $1 in
+        arm64)
+            echo "aarch64-apple-darwin"
+            ;;
+        x86_64)
+            echo "x86_64-apple-darwin"
+            ;;
+        *)
+            echo "Unknown architecture: $1" >&2
+            exit 1
+            ;;
+    esac
+}
 
-echo "Building $PROFILE for $TARGET..."
+# Build for a single target
+build_target() {
+    local TARGET=$1
+    echo "Building $PROFILE for $TARGET..."
 
-if [ "$PROFILE" == "release" ]; then
-    # For release builds (including Archive), use Tauri CLI to build with embedded frontend
-    # This runs beforeBuildCommand from tauri.conf.json and embeds frontend assets
-    if ! command -v cargo-tauri &> /dev/null && ! cargo tauri --version &> /dev/null; then
-        echo "Error: tauri-cli is required for release builds."
-        echo "Install it with: cargo install tauri-cli"
+    if [ "$PROFILE" == "release" ]; then
+        # For release builds, use Tauri CLI to build with embedded frontend
+        if ! command -v cargo-tauri &> /dev/null && ! cargo tauri --version &> /dev/null; then
+            echo "Error: tauri-cli is required for release builds."
+            echo "Install it with: cargo install tauri-cli"
+            exit 1
+        fi
+        cargo tauri build --no-bundle --target $TARGET
+    else
+        # For debug builds, use cargo directly (frontend served by dev server)
+        cargo build --target $TARGET $CARGO_PROFILE_FLAG
+    fi
+}
+
+# Count architectures
+ARCH_COUNT=$(echo $ARCHS | wc -w | tr -d ' ')
+
+if [ "$ARCH_COUNT" -gt 1 ]; then
+    # Universal binary: build for all architectures and combine with lipo
+    echo "Building universal binary for: $ARCHS"
+
+    BINARY_PATHS=""
+    for ARCH in $ARCHS; do
+        TARGET=$(arch_to_target $ARCH)
+        build_target $TARGET
+        BINARY_PATH="${CARGO_TARGET_DIR}/$TARGET/$PROFILE/$BINARY_NAME"
+
+        if [ ! -f "$BINARY_PATH" ]; then
+            echo "Error: Binary not found at $BINARY_PATH"
+            exit 1
+        fi
+
+        BINARY_PATHS="$BINARY_PATHS $BINARY_PATH"
+    done
+
+    # Create universal binary with lipo
+    mkdir -p "${BUILT_PRODUCTS_DIR}/${EXECUTABLE_FOLDER_PATH}"
+    rm -f "${BUILT_PRODUCTS_DIR}/${EXECUTABLE_PATH}"
+    echo "Creating universal binary with lipo..."
+    lipo -create $BINARY_PATHS -output "${BUILT_PRODUCTS_DIR}/${EXECUTABLE_PATH}"
+
+    echo "Universal build complete - binary copied to ${BUILT_PRODUCTS_DIR}/${EXECUTABLE_PATH}"
+else
+    # Single architecture build
+    ARCH=$(echo $ARCHS | awk '{print $1}')
+    TARGET=$(arch_to_target $ARCH)
+    build_target $TARGET
+
+    BINARY_PATH="${CARGO_TARGET_DIR}/$TARGET/$PROFILE/$BINARY_NAME"
+
+    if [ ! -f "$BINARY_PATH" ]; then
+        echo "Error: Binary not found at $BINARY_PATH"
         exit 1
     fi
-    echo "Release build: using Tauri CLI to bundle frontend assets..."
-    cargo tauri build --no-bundle --target $TARGET
-else
-    # For debug builds, use cargo directly (frontend served by dev server)
-    cargo build --target $TARGET $CARGO_PROFILE_FLAG
+
+    echo "Found binary: $BINARY_PATH"
+
+    # Copy binary to Xcode's expected location
+    mkdir -p "${BUILT_PRODUCTS_DIR}/${EXECUTABLE_FOLDER_PATH}"
+    rm -f "${BUILT_PRODUCTS_DIR}/${EXECUTABLE_PATH}"
+    cp "$BINARY_PATH" "${BUILT_PRODUCTS_DIR}/${EXECUTABLE_PATH}"
+
+    echo "Rust build complete - binary copied to ${BUILT_PRODUCTS_DIR}/${EXECUTABLE_PATH}"
 fi
-
-# Find the binary (same name as the package)
-BINARY_NAME=$(grep -m1 'name = ' Cargo.toml | sed 's/name = "\(.*\)"/\1/')
-BINARY_PATH="${CARGO_TARGET_DIR}/$TARGET/$PROFILE/$BINARY_NAME"
-
-if [ ! -f "$BINARY_PATH" ]; then
-    echo "Error: Binary not found at $BINARY_PATH"
-    exit 1
-fi
-
-echo "Found binary: $BINARY_PATH"
-
-# Copy binary to Xcode's expected location
-mkdir -p "${BUILT_PRODUCTS_DIR}/${EXECUTABLE_FOLDER_PATH}"
-# Remove old binary first to avoid launch services caching issues
-rm -f "${BUILT_PRODUCTS_DIR}/${EXECUTABLE_PATH}"
-cp "$BINARY_PATH" "${BUILT_PRODUCTS_DIR}/${EXECUTABLE_PATH}"
-
-echo "Rust build complete - binary copied to ${BUILT_PRODUCTS_DIR}/${EXECUTABLE_PATH}"
