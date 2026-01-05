@@ -158,7 +158,6 @@ describe("init command", () => {
     expect(fs.existsSync(gitignorePath)).toBe(true);
     const content = fs.readFileSync(gitignorePath, "utf8");
     expect(content).toContain("xcuserdata/");
-    expect(content).toContain(".xcodeproj/");
   });
 
   it("updates package.json with script", async () => {

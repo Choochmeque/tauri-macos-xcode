@@ -62,10 +62,7 @@ export async function init(options: InitOptions): Promise<void> {
   generatePodfile(macosDir, appInfo);
 
   // Generate .gitignore
-  fs.writeFileSync(
-    path.join(macosDir, ".gitignore"),
-    "xcuserdata/\nbuild/\n*.xcodeproj/\n",
-  );
+  fs.writeFileSync(path.join(macosDir, ".gitignore"), "xcuserdata/\nbuild/\n");
   console.log("  Created .gitignore");
 
   console.log("");
