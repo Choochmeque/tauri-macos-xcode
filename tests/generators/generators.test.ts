@@ -76,8 +76,31 @@ describe("generators", () => {
         path.join(tempDir, "TestApp_macOS", "Info.plist"),
         "utf8",
       );
-      expect(content).toContain("1.0.0");
-      expect(content).toContain("11.0");
+      expect(content).toContain("$(MARKETING_VERSION)");
+      expect(content).toContain("$(MACOSX_DEPLOYMENT_TARGET)");
+    });
+
+    it("Info.plist includes category when specified", () => {
+      const appInfoWithCategory = {
+        ...mockAppInfo,
+        category: "public.app-category.developer-tools",
+      };
+      generateInfoPlist(tempDir, appInfoWithCategory);
+      const content = fs.readFileSync(
+        path.join(tempDir, "TestApp_macOS", "Info.plist"),
+        "utf8",
+      );
+      expect(content).toContain("LSApplicationCategoryType");
+      expect(content).toContain("public.app-category.developer-tools");
+    });
+
+    it("Info.plist omits category when not specified", () => {
+      generateInfoPlist(tempDir, mockAppInfo);
+      const content = fs.readFileSync(
+        path.join(tempDir, "TestApp_macOS", "Info.plist"),
+        "utf8",
+      );
+      expect(content).not.toContain("LSApplicationCategoryType");
     });
   });
 

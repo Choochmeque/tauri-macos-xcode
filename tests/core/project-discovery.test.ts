@@ -110,6 +110,22 @@ describe("project-discovery", () => {
       const info = getAppInfo(config);
       expect(info.macosDeploymentTarget).toBe("11.0");
     });
+
+    it("reads category from bundle.category", () => {
+      const config = {
+        bundle: {
+          category: "public.app-category.developer-tools",
+        },
+      };
+      const info = getAppInfo(config);
+      expect(info.category).toBe("public.app-category.developer-tools");
+    });
+
+    it("category is undefined when not specified", () => {
+      const config = { bundle: {} };
+      const info = getAppInfo(config);
+      expect(info.category).toBeUndefined();
+    });
   });
 
   describe("detectPackageManager", () => {
