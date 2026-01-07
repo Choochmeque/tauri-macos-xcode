@@ -7,34 +7,38 @@ let currentCommandName: string | null = null;
 
 // Mock commander before importing cli
 vi.mock("commander", () => {
-  const createMockCommand = (): Record<string, unknown> => {
-    const mock: Record<string, unknown> = {};
-
-    mock.name = vi.fn(() => mock);
-    mock.description = vi.fn(() => mock);
-    mock.version = vi.fn(() => mock);
-    mock.option = vi.fn(() => mock);
-    mock.parse = vi.fn(() => mock);
-
-    mock.command = vi.fn((name: string) => {
+  class MockCommand {
+    name() {
+      return this;
+    }
+    description() {
+      return this;
+    }
+    version() {
+      return this;
+    }
+    option() {
+      return this;
+    }
+    parse() {
+      return this;
+    }
+    command(name: string) {
       currentCommandName = name;
-      return mock;
-    });
-
-    mock.action = vi.fn((handler: (options: unknown) => Promise<void>) => {
+      return this;
+    }
+    action(handler: (options: unknown) => Promise<void>) {
       if (currentCommandName === "init") {
         initAction = handler;
       } else if (currentCommandName === "dev") {
         devAction = handler;
       }
-      return mock;
-    });
-
-    return mock;
-  };
+      return this;
+    }
+  }
 
   return {
-    Command: vi.fn(() => createMockCommand()),
+    Command: MockCommand,
   };
 });
 
