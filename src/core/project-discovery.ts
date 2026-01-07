@@ -1,6 +1,11 @@
 import fs from "fs";
 import path from "path";
-import { TauriConfig, AppInfo, ResourceMapping } from "../types.js";
+import {
+  TauriConfig,
+  AppInfo,
+  ResourceMapping,
+  FileAssociation,
+} from "../types.js";
 
 export function findProjectRoot(startDir: string = process.cwd()): string {
   let dir = startDir;
@@ -38,6 +43,18 @@ function parseResources(
   }));
 }
 
+function parseFileAssociations(
+  associations: FileAssociation[] | undefined,
+): FileAssociation[] | undefined {
+  if (!associations || associations.length === 0) return undefined;
+
+  // Strip leading dots from extensions
+  return associations.map((assoc) => ({
+    ...assoc,
+    ext: assoc.ext.map((e) => (e.startsWith(".") ? e.slice(1) : e)),
+  }));
+}
+
 export function getAppInfo(config: TauriConfig): AppInfo {
   const identifier =
     config.identifier || config.bundle?.identifier || "com.example.app";
@@ -55,6 +72,7 @@ export function getAppInfo(config: TauriConfig): AppInfo {
     files: config.bundle?.macOS?.files,
     frameworks: config.bundle?.macOS?.frameworks,
     resources: parseResources(config.bundle?.resources),
+    fileAssociations: parseFileAssociations(config.bundle?.fileAssociations),
   };
 }
 

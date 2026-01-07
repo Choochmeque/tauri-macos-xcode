@@ -225,6 +225,82 @@ describe("project-discovery", () => {
       const info = getAppInfo(config);
       expect(info.resources).toBeUndefined();
     });
+
+    it("reads fileAssociations from bundle.fileAssociations", () => {
+      const config = {
+        bundle: {
+          fileAssociations: [
+            {
+              ext: ["myext"],
+              name: "My File Type",
+              role: "Editor" as const,
+              rank: "Owner" as const,
+            },
+          ],
+        },
+      };
+      const info = getAppInfo(config);
+      expect(info.fileAssociations).toEqual([
+        {
+          ext: ["myext"],
+          name: "My File Type",
+          role: "Editor",
+          rank: "Owner",
+        },
+      ]);
+    });
+
+    it("strips leading dots from extensions", () => {
+      const config = {
+        bundle: {
+          fileAssociations: [
+            {
+              ext: [".myext", "other", ".another"],
+            },
+          ],
+        },
+      };
+      const info = getAppInfo(config);
+      expect(info.fileAssociations?.[0].ext).toEqual([
+        "myext",
+        "other",
+        "another",
+      ]);
+    });
+
+    it("reads fileAssociations with exportedType", () => {
+      const config = {
+        bundle: {
+          fileAssociations: [
+            {
+              ext: ["myext"],
+              contentTypes: ["com.example.myext"],
+              exportedType: {
+                identifier: "com.example.myext",
+                conformsTo: ["public.data", "public.content"],
+              },
+            },
+          ],
+        },
+      };
+      const info = getAppInfo(config);
+      expect(info.fileAssociations?.[0].exportedType).toEqual({
+        identifier: "com.example.myext",
+        conformsTo: ["public.data", "public.content"],
+      });
+    });
+
+    it("fileAssociations is undefined when not specified", () => {
+      const config = { bundle: {} };
+      const info = getAppInfo(config);
+      expect(info.fileAssociations).toBeUndefined();
+    });
+
+    it("fileAssociations is undefined when empty array", () => {
+      const config = { bundle: { fileAssociations: [] } };
+      const info = getAppInfo(config);
+      expect(info.fileAssociations).toBeUndefined();
+    });
   });
 
   describe("detectPackageManager", () => {

@@ -7,6 +7,7 @@ export interface TauriConfig {
     category?: string;
     copyright?: string;
     resources?: string[] | Record<string, string>;
+    fileAssociations?: FileAssociation[];
     macOS?: {
       minimumSystemVersion?: string;
       files?: Record<string, string>;
@@ -23,6 +24,29 @@ export interface ResourceMapping {
   target: string;
 }
 
+// File association types matching Tauri's schema
+export type BundleTypeRole =
+  | "Editor"
+  | "Viewer"
+  | "Shell"
+  | "QLGenerator"
+  | "None";
+export type HandlerRank = "Default" | "Owner" | "Alternate" | "None";
+
+export interface ExportedFileAssociation {
+  identifier: string;
+  conformsTo?: string[];
+}
+
+export interface FileAssociation {
+  ext: string[];
+  name?: string;
+  role?: BundleTypeRole;
+  contentTypes?: string[];
+  rank?: HandlerRank;
+  exportedType?: ExportedFileAssociation;
+}
+
 export interface AppInfo {
   productName: string;
   identifier: string;
@@ -34,6 +58,7 @@ export interface AppInfo {
   files?: Record<string, string>;
   frameworks?: string[];
   resources?: ResourceMapping[];
+  fileAssociations?: FileAssociation[];
 }
 
 export interface InitOptions {

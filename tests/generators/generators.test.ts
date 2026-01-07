@@ -465,6 +465,216 @@ describe("generators", () => {
       expect(content).toContain("$(MARKETING_VERSION)");
       expect(content).toContain("$(MACOSX_DEPLOYMENT_TARGET)");
     });
+
+    it("Info.plist includes CFBundleDocumentTypes for fileAssociations", () => {
+      const appInfoWithFileAssoc = {
+        ...mockAppInfo,
+        fileAssociations: [
+          {
+            ext: ["myext"],
+            name: "My File Type",
+            role: "Editor" as const,
+            rank: "Owner" as const,
+          },
+        ],
+      };
+      generateInfoPlist(tempDir, appInfoWithFileAssoc);
+      const content = fs.readFileSync(
+        path.join(tempDir, "TestApp_macOS", "Info.plist"),
+        "utf8",
+      );
+      expect(content).toContain("<key>CFBundleDocumentTypes</key>");
+      expect(content).toContain("<key>CFBundleTypeName</key>");
+      expect(content).toContain("<string>My File Type</string>");
+      expect(content).toContain("<key>CFBundleTypeRole</key>");
+      expect(content).toContain("<string>Editor</string>");
+      expect(content).toContain("<key>CFBundleTypeExtensions</key>");
+      expect(content).toContain("<string>myext</string>");
+      expect(content).toContain("<key>LSHandlerRank</key>");
+      expect(content).toContain("<string>Owner</string>");
+    });
+
+    it("Info.plist uses default name from extension", () => {
+      const appInfoWithFileAssoc = {
+        ...mockAppInfo,
+        fileAssociations: [
+          {
+            ext: ["xyz"],
+          },
+        ],
+      };
+      generateInfoPlist(tempDir, appInfoWithFileAssoc);
+      const content = fs.readFileSync(
+        path.join(tempDir, "TestApp_macOS", "Info.plist"),
+        "utf8",
+      );
+      expect(content).toContain("<key>CFBundleTypeName</key>");
+      expect(content).toContain("<string>xyz</string>");
+    });
+
+    it("Info.plist uses default role and rank", () => {
+      const appInfoWithFileAssoc = {
+        ...mockAppInfo,
+        fileAssociations: [
+          {
+            ext: ["test"],
+          },
+        ],
+      };
+      generateInfoPlist(tempDir, appInfoWithFileAssoc);
+      const content = fs.readFileSync(
+        path.join(tempDir, "TestApp_macOS", "Info.plist"),
+        "utf8",
+      );
+      // Default role is Editor
+      expect(content).toContain("<key>CFBundleTypeRole</key>");
+      expect(content).toMatch(
+        /<key>CFBundleTypeRole<\/key>\s*<string>Editor<\/string>/,
+      );
+      // Default rank is Default
+      expect(content).toContain("<key>LSHandlerRank</key>");
+      expect(content).toMatch(
+        /<key>LSHandlerRank<\/key>\s*<string>Default<\/string>/,
+      );
+    });
+
+    it("Info.plist includes LSItemContentTypes when specified", () => {
+      const appInfoWithFileAssoc = {
+        ...mockAppInfo,
+        fileAssociations: [
+          {
+            ext: ["myext"],
+            contentTypes: ["com.example.myext", "public.data"],
+          },
+        ],
+      };
+      generateInfoPlist(tempDir, appInfoWithFileAssoc);
+      const content = fs.readFileSync(
+        path.join(tempDir, "TestApp_macOS", "Info.plist"),
+        "utf8",
+      );
+      expect(content).toContain("<key>LSItemContentTypes</key>");
+      expect(content).toContain("<string>com.example.myext</string>");
+      expect(content).toContain("<string>public.data</string>");
+    });
+
+    it("Info.plist includes UTExportedTypeDeclarations for exportedType", () => {
+      const appInfoWithFileAssoc = {
+        ...mockAppInfo,
+        fileAssociations: [
+          {
+            ext: ["myext"],
+            exportedType: {
+              identifier: "com.example.myext",
+              conformsTo: ["public.data", "public.content"],
+            },
+          },
+        ],
+      };
+      generateInfoPlist(tempDir, appInfoWithFileAssoc);
+      const content = fs.readFileSync(
+        path.join(tempDir, "TestApp_macOS", "Info.plist"),
+        "utf8",
+      );
+      expect(content).toContain("<key>UTExportedTypeDeclarations</key>");
+      expect(content).toContain("<key>UTTypeIdentifier</key>");
+      expect(content).toContain("<string>com.example.myext</string>");
+      expect(content).toContain("<key>UTTypeConformsTo</key>");
+      expect(content).toContain("<string>public.data</string>");
+      expect(content).toContain("<string>public.content</string>");
+      expect(content).toContain("<key>UTTypeTagSpecification</key>");
+      expect(content).toContain("<key>public.filename-extension</key>");
+    });
+
+    it("Info.plist omits UTExportedTypeDeclarations when no exportedType", () => {
+      const appInfoWithFileAssoc = {
+        ...mockAppInfo,
+        fileAssociations: [
+          {
+            ext: ["myext"],
+          },
+        ],
+      };
+      generateInfoPlist(tempDir, appInfoWithFileAssoc);
+      const content = fs.readFileSync(
+        path.join(tempDir, "TestApp_macOS", "Info.plist"),
+        "utf8",
+      );
+      expect(content).toContain("<key>CFBundleDocumentTypes</key>");
+      expect(content).not.toContain("<key>UTExportedTypeDeclarations</key>");
+    });
+
+    it("Info.plist omits UTTypeConformsTo when conformsTo is undefined", () => {
+      const appInfoWithFileAssoc = {
+        ...mockAppInfo,
+        fileAssociations: [
+          {
+            ext: ["myext"],
+            exportedType: {
+              identifier: "com.example.myext",
+              // no conformsTo
+            },
+          },
+        ],
+      };
+      generateInfoPlist(tempDir, appInfoWithFileAssoc);
+      const content = fs.readFileSync(
+        path.join(tempDir, "TestApp_macOS", "Info.plist"),
+        "utf8",
+      );
+      expect(content).toContain("<key>UTExportedTypeDeclarations</key>");
+      expect(content).toContain("<key>UTTypeIdentifier</key>");
+      expect(content).toContain("<string>com.example.myext</string>");
+      expect(content).not.toContain("<key>UTTypeConformsTo</key>");
+    });
+
+    it("Info.plist handles multiple file associations", () => {
+      const appInfoWithFileAssoc = {
+        ...mockAppInfo,
+        fileAssociations: [
+          { ext: ["ext1"], name: "Type One" },
+          { ext: ["ext2"], name: "Type Two" },
+        ],
+      };
+      generateInfoPlist(tempDir, appInfoWithFileAssoc);
+      const content = fs.readFileSync(
+        path.join(tempDir, "TestApp_macOS", "Info.plist"),
+        "utf8",
+      );
+      expect(content).toContain("<string>Type One</string>");
+      expect(content).toContain("<string>Type Two</string>");
+      expect(content).toContain("<string>ext1</string>");
+      expect(content).toContain("<string>ext2</string>");
+    });
+
+    it("Info.plist handles multiple extensions in one association", () => {
+      const appInfoWithFileAssoc = {
+        ...mockAppInfo,
+        fileAssociations: [
+          {
+            ext: ["jpg", "jpeg", "png"],
+            name: "Image File",
+          },
+        ],
+      };
+      generateInfoPlist(tempDir, appInfoWithFileAssoc);
+      const content = fs.readFileSync(
+        path.join(tempDir, "TestApp_macOS", "Info.plist"),
+        "utf8",
+      );
+      expect(content).toContain("<string>jpg</string>");
+      expect(content).toContain("<string>jpeg</string>");
+      expect(content).toContain("<string>png</string>");
+    });
+
+    it("Info.plist omits CFBundleDocumentTypes when no fileAssociations", () => {
+      generateInfoPlist(tempDir, mockAppInfo);
+      const content = fs.readFileSync(
+        path.join(tempDir, "TestApp_macOS", "Info.plist"),
+        "utf8",
+      );
+      expect(content).not.toContain("<key>CFBundleDocumentTypes</key>");
+    });
   });
 
   describe("generateEntitlements", () => {
