@@ -8,6 +8,8 @@ export interface TauriConfig {
     copyright?: string;
     macOS?: {
       minimumSystemVersion?: string;
+      files?: Record<string, string>;
+      frameworks?: string[];
     };
   };
   build?: {
@@ -23,6 +25,8 @@ export interface AppInfo {
   macosDeploymentTarget: string;
   category?: string;
   copyright?: string;
+  files?: Record<string, string>;
+  frameworks?: string[];
 }
 
 export interface InitOptions {

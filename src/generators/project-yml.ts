@@ -90,6 +90,146 @@ export function generateProjectYml(macosDir: string, appInfo: AppInfo): void {
     );
   }
 
+  // Process frameworks - categorize by type
+  const systemFrameworks: string[] = [];
+  const embeddedFrameworks: string[] = [];
+  const dylibs: string[] = [];
+
+  if (appInfo.frameworks && appInfo.frameworks.length > 0) {
+    for (const fw of appInfo.frameworks) {
+      if (fw.endsWith(".dylib")) {
+        // Dynamic library - needs to be copied to Frameworks
+        dylibs.push(fw);
+      } else if (fw.includes("/") || fw.includes("\\")) {
+        // Has path separator - local framework to embed
+        embeddedFrameworks.push(fw);
+      } else {
+        // Just a name - system framework
+        systemFrameworks.push(fw);
+      }
+    }
+  }
+
+  // Add system frameworks as SDK dependencies
+  if (systemFrameworks.length > 0) {
+    const sdkDeps = systemFrameworks
+      .map((fw) => `      - sdk: ${fw}.framework`)
+      .join("\n");
+    content = content.replace(
+      "      - sdk: WebKit.framework",
+      `      - sdk: WebKit.framework\n${sdkDeps}`,
+    );
+  }
+
+  // Add embedded frameworks
+  if (embeddedFrameworks.length > 0) {
+    const frameworkDeps = embeddedFrameworks
+      .map((fw) => `      - framework: ${fw}\n        embed: true`)
+      .join("\n");
+    content = content.replace(
+      "      - sdk: WebKit.framework",
+      `      - sdk: WebKit.framework\n${frameworkDeps}`,
+    );
+  }
+
+  // Collect all files to copy (from both appInfo.files and dylibs)
+  // XcodeGen copyFiles uses destination keywords, not paths
+  // Group files by destination folder
+  interface CopyFileEntry {
+    destination: string;
+    subpath?: string;
+    files: string[];
+  }
+  const copyGroups: Map<string, CopyFileEntry> = new Map();
+
+  // Map known directories to XcodeGen destinations
+  const dirMap: Record<string, string> = {
+    Resources: "resources",
+    SharedSupport: "sharedSupport",
+    Frameworks: "frameworks",
+    PlugIns: "plugins",
+    MacOS: "executables",
+  };
+
+  // Helper to parse Tauri destination path and map to XcodeGen destination
+  function parseTauriDestination(destPath: string): {
+    destination: string;
+    subpath?: string;
+  } {
+    const parts = destPath.split("/");
+
+    if (parts.length === 1) {
+      // File directly in Contents/ (e.g., "embedded.provisionprofile")
+      return { destination: "wrapper" };
+    }
+
+    const firstDir = parts[0];
+    const restParts = parts.slice(1, -1); // Everything except first dir and filename
+
+    const xcodeDestination = dirMap[firstDir];
+    if (xcodeDestination) {
+      return {
+        destination: xcodeDestination,
+        subpath: restParts.length > 0 ? restParts.join("/") : undefined,
+      };
+    }
+
+    // Unknown directory - use wrapper with subpath (all dirs except filename)
+    return {
+      destination: "wrapper",
+      subpath: parts.slice(0, -1).join("/"),
+    };
+  }
+
+  // Add user-specified files
+  if (appInfo.files) {
+    for (const [dest, src] of Object.entries(appInfo.files)) {
+      const parsed = parseTauriDestination(dest);
+      const groupKey = `${parsed.destination}:${parsed.subpath || ""}`;
+
+      if (!copyGroups.has(groupKey)) {
+        copyGroups.set(groupKey, {
+          destination: parsed.destination,
+          subpath: parsed.subpath,
+          files: [],
+        });
+      }
+      copyGroups.get(groupKey)!.files.push(src);
+    }
+  }
+
+  // Add dylibs to be copied to Frameworks directory
+  for (const dylib of dylibs) {
+    const groupKey = "frameworks:";
+    if (!copyGroups.has(groupKey)) {
+      copyGroups.set(groupKey, {
+        destination: "frameworks",
+        files: [],
+      });
+    }
+    copyGroups.get(groupKey)!.files.push(dylib);
+  }
+
+  // Add copyFiles section if there are files to copy
+  if (copyGroups.size > 0) {
+    const copyEntries: string[] = [];
+    for (const group of copyGroups.values()) {
+      let entry = `      - destination: ${group.destination}`;
+      if (group.subpath) {
+        entry += `\n        subpath: ${group.subpath}`;
+      }
+      entry += "\n        files:";
+      for (const file of group.files) {
+        entry += `\n          - path: ${file}`;
+      }
+      copyEntries.push(entry);
+    }
+    content = content.replace(
+      "    postCompileScripts:",
+      `    copyFiles:\n${copyEntries.join("\n")}\n    postCompileScripts:`,
+    );
+  }
+
   fs.writeFileSync(path.join(macosDir, "project.yml"), content);
   console.log("  Created project.yml");
 }

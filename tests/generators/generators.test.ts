@@ -84,6 +84,20 @@ describe("generators", () => {
       expect(content).toContain("public.app-category.productivity");
     });
 
+    it("project.yml passes through unknown category as-is", () => {
+      const appInfoWithUnknownCategory = {
+        ...mockAppInfo,
+        category: "SomeUnknownCategory",
+      };
+      generateProjectYml(tempDir, appInfoWithUnknownCategory);
+      const content = fs.readFileSync(
+        path.join(tempDir, "project.yml"),
+        "utf8",
+      );
+      expect(content).toContain("LSApplicationCategoryType");
+      expect(content).toContain("SomeUnknownCategory");
+    });
+
     it("project.yml omits category when not specified", () => {
       generateProjectYml(tempDir, mockAppInfo);
       const content = fs.readFileSync(
@@ -131,6 +145,222 @@ describe("generators", () => {
       expect(content).toContain("public.app-category.productivity");
       expect(content).toContain("INFOPLIST_KEY_NSHumanReadableCopyright");
       expect(content).toContain("Copyright © 2024 Test Company");
+    });
+
+    it("project.yml includes embedded frameworks when specified with path", () => {
+      const appInfoWithFrameworks = {
+        ...mockAppInfo,
+        frameworks: ["vendor/Sparkle.framework", "libs/MyLib.framework"],
+      };
+      generateProjectYml(tempDir, appInfoWithFrameworks);
+      const content = fs.readFileSync(
+        path.join(tempDir, "project.yml"),
+        "utf8",
+      );
+      expect(content).toContain("- framework: vendor/Sparkle.framework");
+      expect(content).toContain("embed: true");
+      expect(content).toContain("- framework: libs/MyLib.framework");
+    });
+
+    it("project.yml adds system frameworks as SDK dependencies", () => {
+      const appInfoWithSystemFrameworks = {
+        ...mockAppInfo,
+        frameworks: ["CoreAudio", "AVFoundation"],
+      };
+      generateProjectYml(tempDir, appInfoWithSystemFrameworks);
+      const content = fs.readFileSync(
+        path.join(tempDir, "project.yml"),
+        "utf8",
+      );
+      expect(content).toContain("- sdk: CoreAudio.framework");
+      expect(content).toContain("- sdk: AVFoundation.framework");
+      expect(content).not.toContain("embed: true");
+    });
+
+    it("project.yml copies dylibs to frameworks directory", () => {
+      const appInfoWithDylibs = {
+        ...mockAppInfo,
+        frameworks: ["./libs/libmsodbcsql.18.dylib"],
+      };
+      generateProjectYml(tempDir, appInfoWithDylibs);
+      const content = fs.readFileSync(
+        path.join(tempDir, "project.yml"),
+        "utf8",
+      );
+      expect(content).toContain("copyFiles:");
+      expect(content).toContain("path: ./libs/libmsodbcsql.18.dylib");
+      expect(content).toContain("destination: frameworks");
+    });
+
+    it("project.yml groups multiple dylibs together", () => {
+      const appInfoWithDylibs = {
+        ...mockAppInfo,
+        frameworks: ["./libs/lib1.dylib", "./libs/lib2.dylib"],
+      };
+      generateProjectYml(tempDir, appInfoWithDylibs);
+      const content = fs.readFileSync(
+        path.join(tempDir, "project.yml"),
+        "utf8",
+      );
+      expect(content).toContain("destination: frameworks");
+      expect(content).toContain("path: ./libs/lib1.dylib");
+      expect(content).toContain("path: ./libs/lib2.dylib");
+      // Should only have one frameworks destination entry
+      const matches = content.match(/destination: frameworks/g);
+      expect(matches?.length).toBe(1);
+    });
+
+    it("project.yml handles mixed framework types", () => {
+      const appInfoWithMixed = {
+        ...mockAppInfo,
+        frameworks: [
+          "CoreAudio",
+          "./libs/libmsodbcsql.18.dylib",
+          "./frameworks/MyApp.framework",
+        ],
+      };
+      generateProjectYml(tempDir, appInfoWithMixed);
+      const content = fs.readFileSync(
+        path.join(tempDir, "project.yml"),
+        "utf8",
+      );
+      // System framework
+      expect(content).toContain("- sdk: CoreAudio.framework");
+      // Embedded framework
+      expect(content).toContain("- framework: ./frameworks/MyApp.framework");
+      expect(content).toContain("embed: true");
+      // Dylib copied to frameworks
+      expect(content).toContain("copyFiles:");
+      expect(content).toContain("path: ./libs/libmsodbcsql.18.dylib");
+      expect(content).toContain("destination: frameworks");
+    });
+
+    it("project.yml omits frameworks when not specified", () => {
+      generateProjectYml(tempDir, mockAppInfo);
+      const content = fs.readFileSync(
+        path.join(tempDir, "project.yml"),
+        "utf8",
+      );
+      expect(content).not.toContain("- framework:");
+      expect(content).not.toContain("embed: true");
+    });
+
+    it("project.yml copies file to wrapper for Contents/ destination", () => {
+      const appInfoWithFiles = {
+        ...mockAppInfo,
+        files: {
+          "embedded.provisionprofile": "./profile.provisionprofile",
+        },
+      };
+      generateProjectYml(tempDir, appInfoWithFiles);
+      const content = fs.readFileSync(
+        path.join(tempDir, "project.yml"),
+        "utf8",
+      );
+      expect(content).toContain("copyFiles:");
+      expect(content).toContain("destination: wrapper");
+      expect(content).toContain("path: ./profile.provisionprofile");
+    });
+
+    it("project.yml copies file to sharedSupport for SharedSupport/ destination", () => {
+      const appInfoWithFiles = {
+        ...mockAppInfo,
+        files: {
+          "SharedSupport/docs.md": "./docs/index.md",
+        },
+      };
+      generateProjectYml(tempDir, appInfoWithFiles);
+      const content = fs.readFileSync(
+        path.join(tempDir, "project.yml"),
+        "utf8",
+      );
+      expect(content).toContain("copyFiles:");
+      expect(content).toContain("destination: sharedSupport");
+      expect(content).toContain("path: ./docs/index.md");
+    });
+
+    it("project.yml uses subpath for nested destinations", () => {
+      const appInfoWithFiles = {
+        ...mockAppInfo,
+        files: {
+          "SharedSupport/data/config.json": "./config.json",
+        },
+      };
+      generateProjectYml(tempDir, appInfoWithFiles);
+      const content = fs.readFileSync(
+        path.join(tempDir, "project.yml"),
+        "utf8",
+      );
+      expect(content).toContain("destination: sharedSupport");
+      expect(content).toContain("subpath: data");
+      expect(content).toContain("path: ./config.json");
+    });
+
+    it("project.yml uses wrapper with subpath for unknown directories", () => {
+      const appInfoWithFiles = {
+        ...mockAppInfo,
+        files: {
+          "CustomFolder/nested/file.txt": "./source.txt",
+        },
+      };
+      generateProjectYml(tempDir, appInfoWithFiles);
+      const content = fs.readFileSync(
+        path.join(tempDir, "project.yml"),
+        "utf8",
+      );
+      expect(content).toContain("destination: wrapper");
+      expect(content).toContain("subpath: CustomFolder/nested");
+      expect(content).toContain("path: ./source.txt");
+    });
+
+    it("project.yml groups multiple files with same destination", () => {
+      const appInfoWithFiles = {
+        ...mockAppInfo,
+        files: {
+          "SharedSupport/file1.txt": "./src/file1.txt",
+          "SharedSupport/file2.txt": "./src/file2.txt",
+        },
+      };
+      generateProjectYml(tempDir, appInfoWithFiles);
+      const content = fs.readFileSync(
+        path.join(tempDir, "project.yml"),
+        "utf8",
+      );
+      expect(content).toContain("destination: sharedSupport");
+      expect(content).toContain("path: ./src/file1.txt");
+      expect(content).toContain("path: ./src/file2.txt");
+      // Should only have one destination entry, not two
+      const matches = content.match(/destination: sharedSupport/g);
+      expect(matches?.length).toBe(1);
+    });
+
+    it("project.yml omits copyFiles when files not specified", () => {
+      generateProjectYml(tempDir, mockAppInfo);
+      const content = fs.readFileSync(
+        path.join(tempDir, "project.yml"),
+        "utf8",
+      );
+      expect(content).not.toContain("copyFiles:");
+    });
+
+    it("project.yml includes both frameworks and files when specified", () => {
+      const appInfoWithBoth = {
+        ...mockAppInfo,
+        frameworks: ["vendor/Sparkle.framework"],
+        files: {
+          "Resources/config.json": "./assets/config.json",
+        },
+      };
+      generateProjectYml(tempDir, appInfoWithBoth);
+      const content = fs.readFileSync(
+        path.join(tempDir, "project.yml"),
+        "utf8",
+      );
+      expect(content).toContain("- framework: vendor/Sparkle.framework");
+      expect(content).toContain("embed: true");
+      expect(content).toContain("copyFiles:");
+      expect(content).toContain("destination: resources");
+      expect(content).toContain("path: ./assets/config.json");
     });
   });
 
