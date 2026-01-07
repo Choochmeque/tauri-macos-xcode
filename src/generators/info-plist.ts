@@ -10,13 +10,7 @@ export function generateInfoPlist(macosDir: string, appInfo: AppInfo): void {
   fs.mkdirSync(targetDir, { recursive: true });
 
   // Load template (uses Xcode build variables, no substitution needed)
-  let content = readTemplate("Info.plist.template");
-
-  // Insert category before </dict> if specified
-  if (appInfo.category) {
-    const categoryEntry = `    <key>LSApplicationCategoryType</key>\n    <string>${appInfo.category}</string>\n`;
-    content = content.replace("</dict>", `${categoryEntry}</dict>`);
-  }
+  const content = readTemplate("Info.plist.template");
 
   fs.writeFileSync(path.join(targetDir, "Info.plist"), content);
   console.log(`  Created ${appInfo.productName}_macOS/Info.plist`);

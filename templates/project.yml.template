@@ -22,9 +22,9 @@ targets:
     info:
       path: {{PRODUCT_NAME}}_macOS/Info.plist
       properties:
-        CFBundleShortVersionString: $(MARKETING_VERSION)
-        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
-        LSMinimumSystemVersion: $(MACOSX_DEPLOYMENT_TARGET)
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        LSMinimumSystemVersion: "$(MACOSX_DEPLOYMENT_TARGET)"
         NSHighResolutionCapable: true
     entitlements:
       path: {{PRODUCT_NAME}}_macOS/{{PRODUCT_NAME}}_macOS.entitlements

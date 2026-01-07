@@ -55,6 +55,43 @@ describe("generators", () => {
       expect(content).toContain("TestApp");
       expect(content).toContain("com.test.testapp");
     });
+
+    it("project.yml includes category when specified with Apple UTI", () => {
+      const appInfoWithCategory = {
+        ...mockAppInfo,
+        category: "public.app-category.developer-tools",
+      };
+      generateProjectYml(tempDir, appInfoWithCategory);
+      const content = fs.readFileSync(
+        path.join(tempDir, "project.yml"),
+        "utf8",
+      );
+      expect(content).toContain("LSApplicationCategoryType");
+      expect(content).toContain("public.app-category.developer-tools");
+    });
+
+    it("project.yml maps Tauri category to Apple UTI", () => {
+      const appInfoWithCategory = {
+        ...mockAppInfo,
+        category: "Productivity",
+      };
+      generateProjectYml(tempDir, appInfoWithCategory);
+      const content = fs.readFileSync(
+        path.join(tempDir, "project.yml"),
+        "utf8",
+      );
+      expect(content).toContain("LSApplicationCategoryType");
+      expect(content).toContain("public.app-category.productivity");
+    });
+
+    it("project.yml omits category when not specified", () => {
+      generateProjectYml(tempDir, mockAppInfo);
+      const content = fs.readFileSync(
+        path.join(tempDir, "project.yml"),
+        "utf8",
+      );
+      expect(content).not.toContain("LSApplicationCategoryType");
+    });
   });
 
   describe("generateInfoPlist", () => {
@@ -78,29 +115,6 @@ describe("generators", () => {
       );
       expect(content).toContain("$(MARKETING_VERSION)");
       expect(content).toContain("$(MACOSX_DEPLOYMENT_TARGET)");
-    });
-
-    it("Info.plist includes category when specified", () => {
-      const appInfoWithCategory = {
-        ...mockAppInfo,
-        category: "public.app-category.developer-tools",
-      };
-      generateInfoPlist(tempDir, appInfoWithCategory);
-      const content = fs.readFileSync(
-        path.join(tempDir, "TestApp_macOS", "Info.plist"),
-        "utf8",
-      );
-      expect(content).toContain("LSApplicationCategoryType");
-      expect(content).toContain("public.app-category.developer-tools");
-    });
-
-    it("Info.plist omits category when not specified", () => {
-      generateInfoPlist(tempDir, mockAppInfo);
-      const content = fs.readFileSync(
-        path.join(tempDir, "TestApp_macOS", "Info.plist"),
-        "utf8",
-      );
-      expect(content).not.toContain("LSApplicationCategoryType");
     });
   });
 
