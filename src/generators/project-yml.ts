@@ -78,7 +78,7 @@ export function generateProjectYml(macosDir: string, appInfo: AppInfo): void {
     const appleCategory = mapCategory(appInfo.category);
     content = content.replace(
       "NSHighResolutionCapable: true",
-      `NSHighResolutionCapable: true\n        LSApplicationCategoryType: ${appleCategory}`,
+      `NSHighResolutionCapable: true\n        INFOPLIST_KEY_LSApplicationCategoryType: ${appleCategory}`,
     );
   }
 
