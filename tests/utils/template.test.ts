@@ -102,7 +102,7 @@ Line 3: A`);
 
     it("reads Info.plist.template", () => {
       const content = readTemplate("Info.plist.template");
-      expect(content).toContain("{{VERSION}}");
+      expect(content).toContain("$(MARKETING_VERSION)");
       expect(content).toContain("CFBundleName");
     });
 

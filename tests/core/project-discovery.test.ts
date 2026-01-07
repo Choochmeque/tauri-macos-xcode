@@ -92,6 +92,40 @@ describe("project-discovery", () => {
       expect(info.bundleIdPrefix).toBe("com.example");
       expect(info.version).toBe("0.1.0");
     });
+
+    it("reads minimumSystemVersion from bundle.macOS", () => {
+      const config = {
+        bundle: {
+          macOS: {
+            minimumSystemVersion: "12.0",
+          },
+        },
+      };
+      const info = getAppInfo(config);
+      expect(info.macosDeploymentTarget).toBe("12.0");
+    });
+
+    it("uses default macosDeploymentTarget when not specified", () => {
+      const config = { bundle: {} };
+      const info = getAppInfo(config);
+      expect(info.macosDeploymentTarget).toBe("11.0");
+    });
+
+    it("reads category from bundle.category", () => {
+      const config = {
+        bundle: {
+          category: "public.app-category.developer-tools",
+        },
+      };
+      const info = getAppInfo(config);
+      expect(info.category).toBe("public.app-category.developer-tools");
+    });
+
+    it("category is undefined when not specified", () => {
+      const config = { bundle: {} };
+      const info = getAppInfo(config);
+      expect(info.category).toBeUndefined();
+    });
   });
 
   describe("detectPackageManager", () => {
