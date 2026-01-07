@@ -5,6 +5,7 @@ export interface TauriConfig {
   bundle?: {
     identifier?: string;
     category?: string;
+    copyright?: string;
     macOS?: {
       minimumSystemVersion?: string;
     };
@@ -21,6 +22,7 @@ export interface AppInfo {
   version: string;
   macosDeploymentTarget: string;
   category?: string;
+  copyright?: string;
 }
 
 export interface InitOptions {

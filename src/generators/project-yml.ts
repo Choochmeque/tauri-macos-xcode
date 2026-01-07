@@ -82,6 +82,14 @@ export function generateProjectYml(macosDir: string, appInfo: AppInfo): void {
     );
   }
 
+  // Insert copyright as build setting if specified
+  if (appInfo.copyright) {
+    content = content.replace(
+      "CODE_SIGN_ALLOW_ENTITLEMENTS_MODIFICATION: YES",
+      `CODE_SIGN_ALLOW_ENTITLEMENTS_MODIFICATION: YES\n        INFOPLIST_KEY_NSHumanReadableCopyright: ${appInfo.copyright}`,
+    );
+  }
+
   fs.writeFileSync(path.join(macosDir, "project.yml"), content);
   console.log("  Created project.yml");
 }

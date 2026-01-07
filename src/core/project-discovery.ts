@@ -34,6 +34,7 @@ export function getAppInfo(config: TauriConfig): AppInfo {
     version: config.version || "0.1.0",
     macosDeploymentTarget: config.bundle?.macOS?.minimumSystemVersion || "11.0",
     category: config.bundle?.category,
+    copyright: config.bundle?.copyright,
   };
 }
 

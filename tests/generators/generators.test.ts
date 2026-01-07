@@ -92,6 +92,46 @@ describe("generators", () => {
       );
       expect(content).not.toContain("LSApplicationCategoryType");
     });
+
+    it("project.yml includes copyright when specified", () => {
+      const appInfoWithCopyright = {
+        ...mockAppInfo,
+        copyright: "Copyright © 2024 Test Company",
+      };
+      generateProjectYml(tempDir, appInfoWithCopyright);
+      const content = fs.readFileSync(
+        path.join(tempDir, "project.yml"),
+        "utf8",
+      );
+      expect(content).toContain("INFOPLIST_KEY_NSHumanReadableCopyright");
+      expect(content).toContain("Copyright © 2024 Test Company");
+    });
+
+    it("project.yml omits copyright when not specified", () => {
+      generateProjectYml(tempDir, mockAppInfo);
+      const content = fs.readFileSync(
+        path.join(tempDir, "project.yml"),
+        "utf8",
+      );
+      expect(content).not.toContain("NSHumanReadableCopyright");
+    });
+
+    it("project.yml includes both category and copyright when specified", () => {
+      const appInfoWithBoth = {
+        ...mockAppInfo,
+        category: "Productivity",
+        copyright: "Copyright © 2024 Test Company",
+      };
+      generateProjectYml(tempDir, appInfoWithBoth);
+      const content = fs.readFileSync(
+        path.join(tempDir, "project.yml"),
+        "utf8",
+      );
+      expect(content).toContain("INFOPLIST_KEY_LSApplicationCategoryType");
+      expect(content).toContain("public.app-category.productivity");
+      expect(content).toContain("INFOPLIST_KEY_NSHumanReadableCopyright");
+      expect(content).toContain("Copyright © 2024 Test Company");
+    });
   });
 
   describe("generateInfoPlist", () => {

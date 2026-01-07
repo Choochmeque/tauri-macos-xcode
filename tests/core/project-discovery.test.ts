@@ -126,6 +126,22 @@ describe("project-discovery", () => {
       const info = getAppInfo(config);
       expect(info.category).toBeUndefined();
     });
+
+    it("reads copyright from bundle.copyright", () => {
+      const config = {
+        bundle: {
+          copyright: "Copyright © 2024 Test Company",
+        },
+      };
+      const info = getAppInfo(config);
+      expect(info.copyright).toBe("Copyright © 2024 Test Company");
+    });
+
+    it("copyright is undefined when not specified", () => {
+      const config = { bundle: {} };
+      const info = getAppInfo(config);
+      expect(info.copyright).toBeUndefined();
+    });
   });
 
   describe("detectPackageManager", () => {
