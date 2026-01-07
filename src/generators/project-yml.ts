@@ -73,12 +73,12 @@ export function generateProjectYml(macosDir: string, appInfo: AppInfo): void {
 
   let content = processTemplate("project.yml.template", vars);
 
-  // Insert category in info.properties if specified
+  // Insert category as build setting if specified
   if (appInfo.category) {
     const appleCategory = mapCategory(appInfo.category);
     content = content.replace(
-      "NSHighResolutionCapable: true",
-      `NSHighResolutionCapable: true\n        INFOPLIST_KEY_LSApplicationCategoryType: ${appleCategory}`,
+      "CODE_SIGN_ALLOW_ENTITLEMENTS_MODIFICATION: YES",
+      `CODE_SIGN_ALLOW_ENTITLEMENTS_MODIFICATION: YES\n        INFOPLIST_KEY_LSApplicationCategoryType: ${appleCategory}`,
     );
   }
 
