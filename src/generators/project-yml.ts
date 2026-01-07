@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import plist from "plist";
+import { parse as parsePlist } from "plist";
 import { AppInfo, TemplateVars, FileAssociation } from "../types.js";
 import { processTemplate } from "../utils/template.js";
 
@@ -66,7 +66,7 @@ function mapCategory(category: string): string {
 function readPlistAsJson(plistPath: string): Record<string, unknown> | null {
   try {
     const content = fs.readFileSync(plistPath, "utf8");
-    const result = plist.parse(content);
+    const result = parsePlist(content);
     if (
       typeof result === "object" &&
       result !== null &&

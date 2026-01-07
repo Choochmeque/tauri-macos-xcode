@@ -12,7 +12,15 @@ export default [
       resolve(),
       typescript({ declaration: true, declarationDir: "dist" }),
     ],
-    external: ["commander", "jimp", "fs", "path", "child_process", "url"],
+    external: [
+      "commander",
+      "jimp",
+      "plist",
+      "fs",
+      "path",
+      "child_process",
+      "url",
+    ],
   },
   {
     input: "src/cli.ts",
@@ -22,6 +30,14 @@ export default [
       banner: "#!/usr/bin/env node",
     },
     plugins: [resolve(), typescript()],
-    external: ["commander", "jimp", "fs", "path", "child_process", "url"],
+    external: [
+      "commander",
+      "jimp",
+      "plist",
+      "fs",
+      "path",
+      "child_process",
+      "url",
+    ],
   },
 ];
