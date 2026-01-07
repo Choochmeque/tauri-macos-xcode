@@ -54,9 +54,9 @@ export async function init(options: InitOptions): Promise<void> {
   fs.mkdirSync(path.join(macosDir, "scripts"), { recursive: true });
 
   // Generate files
-  generateProjectYml(macosDir, appInfo);
+  generateProjectYml(macosDir, appInfo, projectRoot);
   generateInfoPlist(macosDir, appInfo);
-  generateEntitlements(macosDir, appInfo);
+  generateEntitlements(macosDir, appInfo, projectRoot);
   await generateAssets(macosDir, appInfo, projectRoot);
   generateBuildScript(macosDir);
   generatePodfile(macosDir, appInfo);

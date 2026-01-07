@@ -12,6 +12,8 @@ export interface TauriConfig {
       minimumSystemVersion?: string;
       files?: Record<string, string>;
       frameworks?: string[];
+      entitlements?: string;
+      infoPlist?: string;
     };
   };
   build?: {
@@ -59,6 +61,8 @@ export interface AppInfo {
   frameworks?: string[];
   resources?: ResourceMapping[];
   fileAssociations?: FileAssociation[];
+  entitlements?: string;
+  infoPlist?: string;
 }
 
 export interface InitOptions {

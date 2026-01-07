@@ -4,7 +4,10 @@ import path from "path";
 import os from "os";
 import { Jimp } from "jimp";
 import { AppInfo } from "../../src/types.js";
-import { generateProjectYml } from "../../src/generators/project-yml.js";
+import {
+  generateProjectYml,
+  valueToYaml,
+} from "../../src/generators/project-yml.js";
 import { generateInfoPlist } from "../../src/generators/info-plist.js";
 import { generateEntitlements } from "../../src/generators/entitlements.js";
 import { generateBuildScript } from "../../src/generators/build-script.js";
@@ -578,6 +581,187 @@ describe("generators", () => {
       expect(content).toContain("UTTypeIdentifier: com.example.myext");
       expect(content).not.toContain("UTTypeConformsTo:");
     });
+
+    it("project.yml merges custom infoPlist properties", () => {
+      const projectRoot = fs.mkdtempSync(
+        path.join(os.tmpdir(), "tauri-project-"),
+      );
+      const srcTauri = path.join(projectRoot, "src-tauri");
+      fs.mkdirSync(srcTauri, { recursive: true });
+      const plistContent = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>LSMinimumSystemVersionByArchitecture</key>
+    <dict>
+        <key>arm64</key>
+        <string>11.0</string>
+    </dict>
+    <key>NSMicrophoneUsageDescription</key>
+    <string>Required for audio input</string>
+</dict>
+</plist>`;
+      fs.writeFileSync(path.join(srcTauri, "Info.plist"), plistContent);
+
+      const appInfo = { ...mockAppInfo, infoPlist: "Info.plist" };
+      generateProjectYml(tempDir, appInfo, projectRoot);
+
+      const content = fs.readFileSync(
+        path.join(tempDir, "project.yml"),
+        "utf8",
+      );
+      expect(content).toContain("NSMicrophoneUsageDescription");
+      expect(content).toContain("Required for audio input");
+      fs.rmSync(projectRoot, { recursive: true });
+    });
+
+    it("project.yml warns when custom infoPlist not found", () => {
+      const projectRoot = fs.mkdtempSync(
+        path.join(os.tmpdir(), "tauri-project-"),
+      );
+      fs.mkdirSync(path.join(projectRoot, "src-tauri"), { recursive: true });
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+      const appInfo = { ...mockAppInfo, infoPlist: "missing.plist" };
+      generateProjectYml(tempDir, appInfo, projectRoot);
+
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining("Custom Info.plist file not found"),
+      );
+      fs.rmSync(projectRoot, { recursive: true });
+    });
+
+    it("project.yml warns when custom infoPlist cannot be parsed", () => {
+      const projectRoot = fs.mkdtempSync(
+        path.join(os.tmpdir(), "tauri-project-"),
+      );
+      const srcTauri = path.join(projectRoot, "src-tauri");
+      fs.mkdirSync(srcTauri, { recursive: true });
+      fs.writeFileSync(path.join(srcTauri, "invalid.plist"), "not valid plist");
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+      const appInfo = { ...mockAppInfo, infoPlist: "invalid.plist" };
+      generateProjectYml(tempDir, appInfo, projectRoot);
+
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining("Could not parse Info.plist"),
+      );
+      fs.rmSync(projectRoot, { recursive: true });
+    });
+
+    it("project.yml handles infoPlist with arrays and booleans", () => {
+      const projectRoot = fs.mkdtempSync(
+        path.join(os.tmpdir(), "tauri-project-"),
+      );
+      const srcTauri = path.join(projectRoot, "src-tauri");
+      fs.mkdirSync(srcTauri, { recursive: true });
+      const plistContent = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>LSArchitecturePriority</key>
+    <array>
+        <string>arm64</string>
+        <string>x86_64</string>
+    </array>
+    <key>NSSupportsAutomaticTermination</key>
+    <true/>
+    <key>NSSupportsSuddenTermination</key>
+    <false/>
+    <key>BuildNumber</key>
+    <integer>42</integer>
+</dict>
+</plist>`;
+      fs.writeFileSync(path.join(srcTauri, "Info.plist"), plistContent);
+
+      const appInfo = { ...mockAppInfo, infoPlist: "Info.plist" };
+      generateProjectYml(tempDir, appInfo, projectRoot);
+
+      const content = fs.readFileSync(
+        path.join(tempDir, "project.yml"),
+        "utf8",
+      );
+      expect(content).toContain("LSArchitecturePriority:");
+      expect(content).toContain("arm64");
+      expect(content).toContain("x86_64");
+      expect(content).toContain("NSSupportsAutomaticTermination: true");
+      expect(content).toContain("NSSupportsSuddenTermination: false");
+      expect(content).toContain("BuildNumber: 42");
+      fs.rmSync(projectRoot, { recursive: true });
+    });
+
+    it("project.yml handles infoPlist with special characters in strings", () => {
+      const projectRoot = fs.mkdtempSync(
+        path.join(os.tmpdir(), "tauri-project-"),
+      );
+      const srcTauri = path.join(projectRoot, "src-tauri");
+      fs.mkdirSync(srcTauri, { recursive: true });
+      const plistContent = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>CFBundleGetInfoString</key>
+    <string>Version: 1.0 # Build 42</string>
+</dict>
+</plist>`;
+      fs.writeFileSync(path.join(srcTauri, "Info.plist"), plistContent);
+
+      const appInfo = { ...mockAppInfo, infoPlist: "Info.plist" };
+      generateProjectYml(tempDir, appInfo, projectRoot);
+
+      const content = fs.readFileSync(
+        path.join(tempDir, "project.yml"),
+        "utf8",
+      );
+      expect(content).toContain("CFBundleGetInfoString:");
+      expect(content).toContain('"Version: 1.0 # Build 42"');
+      fs.rmSync(projectRoot, { recursive: true });
+    });
+
+    it("project.yml handles infoPlist with empty dict and array", () => {
+      const projectRoot = fs.mkdtempSync(
+        path.join(os.tmpdir(), "tauri-project-"),
+      );
+      const srcTauri = path.join(projectRoot, "src-tauri");
+      fs.mkdirSync(srcTauri, { recursive: true });
+      const plistContent = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>EmptyArray</key>
+    <array/>
+    <key>EmptyDict</key>
+    <dict/>
+</dict>
+</plist>`;
+      fs.writeFileSync(path.join(srcTauri, "Info.plist"), plistContent);
+
+      const appInfo = { ...mockAppInfo, infoPlist: "Info.plist" };
+      generateProjectYml(tempDir, appInfo, projectRoot);
+
+      const content = fs.readFileSync(
+        path.join(tempDir, "project.yml"),
+        "utf8",
+      );
+      expect(content).toContain("EmptyArray: []");
+      expect(content).toContain("EmptyDict: {}");
+      fs.rmSync(projectRoot, { recursive: true });
+    });
+  });
+
+  describe("valueToYaml", () => {
+    it("returns ~ for null", () => {
+      expect(valueToYaml(null, 0)).toBe("~");
+    });
+
+    it("returns ~ for undefined", () => {
+      expect(valueToYaml(undefined, 0)).toBe("~");
+    });
+
+    it("converts unknown types using String()", () => {
+      const sym = Symbol("test");
+      expect(valueToYaml(sym, 0)).toBe("Symbol(test)");
+    });
   });
 
   describe("generateInfoPlist", () => {
@@ -623,6 +807,57 @@ describe("generators", () => {
       );
       expect(content).toContain("<?xml");
       expect(content).toContain("plist");
+    });
+
+    it("uses custom entitlements file when specified", () => {
+      const projectRoot = fs.mkdtempSync(
+        path.join(os.tmpdir(), "tauri-project-"),
+      );
+      const srcTauri = path.join(projectRoot, "src-tauri");
+      fs.mkdirSync(srcTauri, { recursive: true });
+      const customContent = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>com.apple.security.custom</key>
+    <true/>
+</dict>
+</plist>`;
+      fs.writeFileSync(
+        path.join(srcTauri, "custom.entitlements"),
+        customContent,
+      );
+
+      const appInfo = { ...mockAppInfo, entitlements: "custom.entitlements" };
+      generateEntitlements(tempDir, appInfo, projectRoot);
+
+      const content = fs.readFileSync(
+        path.join(tempDir, "TestApp_macOS", "TestApp_macOS.entitlements"),
+        "utf8",
+      );
+      expect(content).toContain("com.apple.security.custom");
+      fs.rmSync(projectRoot, { recursive: true });
+    });
+
+    it("falls back to template when custom entitlements file not found", () => {
+      const projectRoot = fs.mkdtempSync(
+        path.join(os.tmpdir(), "tauri-project-"),
+      );
+      fs.mkdirSync(path.join(projectRoot, "src-tauri"), { recursive: true });
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+      const appInfo = { ...mockAppInfo, entitlements: "missing.entitlements" };
+      generateEntitlements(tempDir, appInfo, projectRoot);
+
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining("Custom entitlements file not found"),
+      );
+      const content = fs.readFileSync(
+        path.join(tempDir, "TestApp_macOS", "TestApp_macOS.entitlements"),
+        "utf8",
+      );
+      expect(content).toContain("<?xml");
+      fs.rmSync(projectRoot, { recursive: true });
     });
   });
 

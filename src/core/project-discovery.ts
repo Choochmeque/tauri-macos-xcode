@@ -73,6 +73,8 @@ export function getAppInfo(config: TauriConfig): AppInfo {
     frameworks: config.bundle?.macOS?.frameworks,
     resources: parseResources(config.bundle?.resources),
     fileAssociations: parseFileAssociations(config.bundle?.fileAssociations),
+    entitlements: config.bundle?.macOS?.entitlements,
+    infoPlist: config.bundle?.macOS?.infoPlist,
   };
 }
 

@@ -301,6 +301,42 @@ describe("project-discovery", () => {
       const info = getAppInfo(config);
       expect(info.fileAssociations).toBeUndefined();
     });
+
+    it("reads entitlements from bundle.macOS.entitlements", () => {
+      const config = {
+        bundle: {
+          macOS: {
+            entitlements: "custom.entitlements",
+          },
+        },
+      };
+      const info = getAppInfo(config);
+      expect(info.entitlements).toBe("custom.entitlements");
+    });
+
+    it("entitlements is undefined when not specified", () => {
+      const config = { bundle: { macOS: {} } };
+      const info = getAppInfo(config);
+      expect(info.entitlements).toBeUndefined();
+    });
+
+    it("reads infoPlist from bundle.macOS.infoPlist", () => {
+      const config = {
+        bundle: {
+          macOS: {
+            infoPlist: "Info.plist",
+          },
+        },
+      };
+      const info = getAppInfo(config);
+      expect(info.infoPlist).toBe("Info.plist");
+    });
+
+    it("infoPlist is undefined when not specified", () => {
+      const config = { bundle: { macOS: {} } };
+      const info = getAppInfo(config);
+      expect(info.infoPlist).toBeUndefined();
+    });
   });
 
   describe("detectPackageManager", () => {

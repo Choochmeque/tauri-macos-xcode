@@ -1,5 +1,6 @@
 import fs from "fs";
 import path from "path";
+import { execSync } from "child_process";
 import { AppInfo, TemplateVars, FileAssociation } from "../types.js";
 import { processTemplate } from "../utils/template.js";
 
@@ -62,6 +63,70 @@ function mapCategory(category: string): string {
   return CATEGORY_MAP[category] || category;
 }
 
+function readPlistAsJson(plistPath: string): Record<string, unknown> | null {
+  try {
+    const json = execSync(`plutil -convert json -o - "${plistPath}"`, {
+      encoding: "utf8",
+    });
+    return JSON.parse(json);
+  } catch {
+    return null;
+  }
+}
+
+export function valueToYaml(value: unknown, indent: number): string {
+  const pad = " ".repeat(indent);
+
+  if (value === null || value === undefined) {
+    return "~";
+  }
+  if (typeof value === "boolean") {
+    return value ? "true" : "false";
+  }
+  if (typeof value === "number") {
+    return String(value);
+  }
+  if (typeof value === "string") {
+    if (value.includes("\n") || value.includes(":") || value.includes("#")) {
+      return `"${value.replace(/"/g, '\\"')}"`;
+    }
+    return value;
+  }
+  if (Array.isArray(value)) {
+    if (value.length === 0) return "[]";
+    const items = value.map((v) => `${pad}  - ${valueToYaml(v, indent + 4)}`);
+    return "\n" + items.join("\n");
+  }
+  if (typeof value === "object") {
+    const entries = Object.entries(value as Record<string, unknown>);
+    if (entries.length === 0) return "{}";
+    const items = entries.map(
+      ([k, v]) => `${pad}  ${k}: ${valueToYaml(v, indent + 2)}`,
+    );
+    return "\n" + items.join("\n");
+  }
+  return String(value);
+}
+
+function plistToInfoPropertiesYaml(
+  plist: Record<string, unknown>,
+  baseIndent: number = 8,
+): string {
+  const lines: string[] = [];
+  const pad = " ".repeat(baseIndent);
+
+  for (const [key, value] of Object.entries(plist)) {
+    const yamlValue = valueToYaml(value, baseIndent);
+    if (yamlValue.startsWith("\n")) {
+      lines.push(`${pad}${key}:${yamlValue}`);
+    } else {
+      lines.push(`${pad}${key}: ${yamlValue}`);
+    }
+  }
+
+  return lines.join("\n");
+}
+
 function generateFileAssociationsYaml(
   fileAssociations: FileAssociation[],
 ): string {
@@ -113,7 +178,11 @@ function generateFileAssociationsYaml(
   return lines.join("\n");
 }
 
-export function generateProjectYml(macosDir: string, appInfo: AppInfo): void {
+export function generateProjectYml(
+  macosDir: string,
+  appInfo: AppInfo,
+  projectRoot?: string,
+): void {
   const vars: TemplateVars = {
     PRODUCT_NAME: appInfo.productName,
     BUNDLE_IDENTIFIER: appInfo.identifier,
@@ -150,6 +219,33 @@ export function generateProjectYml(macosDir: string, appInfo: AppInfo): void {
       "        NSHighResolutionCapable: true",
       `        NSHighResolutionCapable: true\n${fileAssocYaml}`,
     );
+  }
+
+  // Merge custom Info.plist if specified
+  if (appInfo.infoPlist && projectRoot) {
+    const customPlistPath = path.join(
+      projectRoot,
+      "src-tauri",
+      appInfo.infoPlist,
+    );
+    if (fs.existsSync(customPlistPath)) {
+      const plistData = readPlistAsJson(customPlistPath);
+      if (plistData) {
+        const customYaml = plistToInfoPropertiesYaml(plistData);
+        content = content.replace(
+          "        NSHighResolutionCapable: true",
+          `        NSHighResolutionCapable: true\n${customYaml}`,
+        );
+      } else {
+        console.warn(
+          `  Warning: Could not parse Info.plist file: ${customPlistPath}`,
+        );
+      }
+    } else {
+      console.warn(
+        `  Warning: Custom Info.plist file not found: ${customPlistPath}`,
+      );
+    }
   }
 
   // Process frameworks - categorize by type
