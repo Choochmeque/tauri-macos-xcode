@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { AppInfo, TemplateVars } from "../types.js";
+import { AppInfo, TemplateVars, FileAssociation } from "../types.js";
 import { processTemplate } from "../utils/template.js";
 
 // Map Tauri category names to Apple LSApplicationCategoryType UTIs
@@ -62,6 +62,57 @@ function mapCategory(category: string): string {
   return CATEGORY_MAP[category] || category;
 }
 
+function generateFileAssociationsYaml(
+  fileAssociations: FileAssociation[],
+): string {
+  const lines: string[] = [];
+
+  // Generate CFBundleDocumentTypes
+  lines.push("        CFBundleDocumentTypes:");
+  for (const assoc of fileAssociations) {
+    const name = assoc.name || assoc.ext[0];
+    const role = assoc.role || "Editor";
+    const rank = assoc.rank || "Default";
+
+    lines.push("          - CFBundleTypeName: " + name);
+    lines.push("            CFBundleTypeRole: " + role);
+    lines.push("            CFBundleTypeExtensions:");
+    for (const ext of assoc.ext) {
+      lines.push("              - " + ext);
+    }
+    if (assoc.contentTypes && assoc.contentTypes.length > 0) {
+      lines.push("            LSItemContentTypes:");
+      for (const ct of assoc.contentTypes) {
+        lines.push("              - " + ct);
+      }
+    }
+    lines.push("            LSHandlerRank: " + rank);
+  }
+
+  // Generate UTExportedTypeDeclarations for associations with exportedType
+  const exportedTypes = fileAssociations.filter((a) => a.exportedType);
+  if (exportedTypes.length > 0) {
+    lines.push("        UTExportedTypeDeclarations:");
+    for (const assoc of exportedTypes) {
+      const exp = assoc.exportedType!;
+      lines.push("          - UTTypeIdentifier: " + exp.identifier);
+      if (exp.conformsTo && exp.conformsTo.length > 0) {
+        lines.push("            UTTypeConformsTo:");
+        for (const ct of exp.conformsTo) {
+          lines.push("              - " + ct);
+        }
+      }
+      lines.push("            UTTypeTagSpecification:");
+      lines.push("              public.filename-extension:");
+      for (const ext of assoc.ext) {
+        lines.push("                - " + ext);
+      }
+    }
+  }
+
+  return lines.join("\n");
+}
+
 export function generateProjectYml(macosDir: string, appInfo: AppInfo): void {
   const vars: TemplateVars = {
     PRODUCT_NAME: appInfo.productName,
@@ -87,6 +138,17 @@ export function generateProjectYml(macosDir: string, appInfo: AppInfo): void {
     content = content.replace(
       "CODE_SIGN_ALLOW_ENTITLEMENTS_MODIFICATION: YES",
       `CODE_SIGN_ALLOW_ENTITLEMENTS_MODIFICATION: YES\n        INFOPLIST_KEY_NSHumanReadableCopyright: ${appInfo.copyright}`,
+    );
+  }
+
+  // Insert file associations into info.properties if specified
+  if (appInfo.fileAssociations && appInfo.fileAssociations.length > 0) {
+    const fileAssocYaml = generateFileAssociationsYaml(
+      appInfo.fileAssociations,
+    );
+    content = content.replace(
+      "        NSHighResolutionCapable: true",
+      `        NSHighResolutionCapable: true\n${fileAssocYaml}`,
     );
   }
 
