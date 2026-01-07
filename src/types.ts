@@ -4,6 +4,9 @@ export interface TauriConfig {
   version?: string;
   bundle?: {
     identifier?: string;
+    macOS?: {
+      minimumSystemVersion?: string;
+    };
   };
   build?: {
     beforeDevCommand?: string;
