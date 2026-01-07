@@ -210,6 +210,23 @@ export function generateProjectYml(macosDir: string, appInfo: AppInfo): void {
     copyGroups.get(groupKey)!.files.push(dylib);
   }
 
+  // Add resources to be copied to Resources directory
+  if (appInfo.resources && appInfo.resources.length > 0) {
+    for (const resource of appInfo.resources) {
+      const subpath = resource.target || undefined;
+      const groupKey = `resources:${subpath || ""}`;
+
+      if (!copyGroups.has(groupKey)) {
+        copyGroups.set(groupKey, {
+          destination: "resources",
+          subpath,
+          files: [],
+        });
+      }
+      copyGroups.get(groupKey)!.files.push(resource.source);
+    }
+  }
+
   // Add copyFiles section if there are files to copy
   if (copyGroups.size > 0) {
     const copyEntries: string[] = [];

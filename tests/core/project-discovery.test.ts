@@ -190,6 +190,41 @@ describe("project-discovery", () => {
       const info = getAppInfo(config);
       expect(info.frameworks).toBeUndefined();
     });
+
+    it("reads resources from bundle.resources array format", () => {
+      const config = {
+        bundle: {
+          resources: ["assets/data.json", "config/**"],
+        },
+      };
+      const info = getAppInfo(config);
+      expect(info.resources).toEqual([
+        { source: "assets/data.json", target: "" },
+        { source: "config/**", target: "" },
+      ]);
+    });
+
+    it("reads resources from bundle.resources object format", () => {
+      const config = {
+        bundle: {
+          resources: {
+            "infoplist/**": "./",
+            "data/config.json": "configs",
+          },
+        },
+      };
+      const info = getAppInfo(config);
+      expect(info.resources).toEqual([
+        { source: "infoplist/**", target: "./" },
+        { source: "data/config.json", target: "configs" },
+      ]);
+    });
+
+    it("resources is undefined when not specified", () => {
+      const config = { bundle: {} };
+      const info = getAppInfo(config);
+      expect(info.resources).toBeUndefined();
+    });
   });
 
   describe("detectPackageManager", () => {

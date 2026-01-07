@@ -6,6 +6,7 @@ export interface TauriConfig {
     identifier?: string;
     category?: string;
     copyright?: string;
+    resources?: string[] | Record<string, string>;
     macOS?: {
       minimumSystemVersion?: string;
       files?: Record<string, string>;
@@ -15,6 +16,11 @@ export interface TauriConfig {
   build?: {
     beforeDevCommand?: string;
   };
+}
+
+export interface ResourceMapping {
+  source: string;
+  target: string;
 }
 
 export interface AppInfo {
@@ -27,6 +33,7 @@ export interface AppInfo {
   copyright?: string;
   files?: Record<string, string>;
   frameworks?: string[];
+  resources?: ResourceMapping[];
 }
 
 export interface InitOptions {

@@ -362,6 +362,85 @@ describe("generators", () => {
       expect(content).toContain("destination: resources");
       expect(content).toContain("path: ./assets/config.json");
     });
+
+    it("project.yml copies resources to Resources directory", () => {
+      const appInfoWithResources = {
+        ...mockAppInfo,
+        resources: [
+          { source: "assets/data.json", target: "" },
+          { source: "config/**", target: "" },
+        ],
+      };
+      generateProjectYml(tempDir, appInfoWithResources);
+      const content = fs.readFileSync(
+        path.join(tempDir, "project.yml"),
+        "utf8",
+      );
+      expect(content).toContain("copyFiles:");
+      expect(content).toContain("destination: resources");
+      expect(content).toContain("path: assets/data.json");
+      expect(content).toContain("path: config/**");
+    });
+
+    it("project.yml copies resources with subpath when target specified", () => {
+      const appInfoWithResources = {
+        ...mockAppInfo,
+        resources: [{ source: "data/config.json", target: "configs" }],
+      };
+      generateProjectYml(tempDir, appInfoWithResources);
+      const content = fs.readFileSync(
+        path.join(tempDir, "project.yml"),
+        "utf8",
+      );
+      expect(content).toContain("copyFiles:");
+      expect(content).toContain("destination: resources");
+      expect(content).toContain("subpath: configs");
+      expect(content).toContain("path: data/config.json");
+    });
+
+    it("project.yml groups resources with same target", () => {
+      const appInfoWithResources = {
+        ...mockAppInfo,
+        resources: [
+          { source: "file1.json", target: "data" },
+          { source: "file2.json", target: "data" },
+        ],
+      };
+      generateProjectYml(tempDir, appInfoWithResources);
+      const content = fs.readFileSync(
+        path.join(tempDir, "project.yml"),
+        "utf8",
+      );
+      expect(content).toContain("destination: resources");
+      expect(content).toContain("subpath: data");
+      expect(content).toContain("path: file1.json");
+      expect(content).toContain("path: file2.json");
+      // Should only have one resources destination with subpath data
+      const matches = content.match(/subpath: data/g);
+      expect(matches?.length).toBe(1);
+    });
+
+    it("project.yml omits resources subpath for empty target", () => {
+      const appInfoWithResources = {
+        ...mockAppInfo,
+        resources: [{ source: "data.json", target: "" }],
+      };
+      generateProjectYml(tempDir, appInfoWithResources);
+      const content = fs.readFileSync(
+        path.join(tempDir, "project.yml"),
+        "utf8",
+      );
+      expect(content).toContain("destination: resources");
+      expect(content).toContain("path: data.json");
+      // Check that there's no subpath for this entry
+      const lines = content.split("\n");
+      const resourcesIndex = lines.findIndex((l) =>
+        l.includes("destination: resources"),
+      );
+      expect(resourcesIndex).toBeGreaterThan(-1);
+      // The line after destination should be "files:", not "subpath:"
+      expect(lines[resourcesIndex + 1].trim()).toBe("files:");
+    });
   });
 
   describe("generateInfoPlist", () => {

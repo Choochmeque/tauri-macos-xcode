@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { TauriConfig, AppInfo } from "../types.js";
+import { TauriConfig, AppInfo, ResourceMapping } from "../types.js";
 
 export function findProjectRoot(startDir: string = process.cwd()): string {
   let dir = startDir;
@@ -21,6 +21,23 @@ export function readTauriConfig(projectRoot: string): TauriConfig {
   return JSON.parse(fs.readFileSync(configPath, "utf8"));
 }
 
+function parseResources(
+  resources: string[] | Record<string, string> | undefined,
+): ResourceMapping[] | undefined {
+  if (!resources) return undefined;
+
+  if (Array.isArray(resources)) {
+    // Array format: ["path/to/file"] → copies to Resources root
+    return resources.map((source) => ({ source, target: "" }));
+  }
+
+  // Object format: { "source/path": "target/path" }
+  return Object.entries(resources).map(([source, target]) => ({
+    source,
+    target,
+  }));
+}
+
 export function getAppInfo(config: TauriConfig): AppInfo {
   const identifier =
     config.identifier || config.bundle?.identifier || "com.example.app";
@@ -37,6 +54,7 @@ export function getAppInfo(config: TauriConfig): AppInfo {
     copyright: config.bundle?.copyright,
     files: config.bundle?.macOS?.files,
     frameworks: config.bundle?.macOS?.frameworks,
+    resources: parseResources(config.bundle?.resources),
   };
 }
 
