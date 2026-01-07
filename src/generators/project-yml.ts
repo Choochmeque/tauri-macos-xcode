@@ -1,6 +1,6 @@
 import fs from "fs";
 import path from "path";
-import { execSync } from "child_process";
+import plist from "plist";
 import { AppInfo, TemplateVars, FileAssociation } from "../types.js";
 import { processTemplate } from "../utils/template.js";
 
@@ -65,10 +65,16 @@ function mapCategory(category: string): string {
 
 function readPlistAsJson(plistPath: string): Record<string, unknown> | null {
   try {
-    const json = execSync(`plutil -convert json -o - "${plistPath}"`, {
-      encoding: "utf8",
-    });
-    return JSON.parse(json);
+    const content = fs.readFileSync(plistPath, "utf8");
+    const result = plist.parse(content);
+    if (
+      typeof result === "object" &&
+      result !== null &&
+      !Array.isArray(result)
+    ) {
+      return result as Record<string, unknown>;
+    }
+    return null;
   } catch {
     return null;
   }
