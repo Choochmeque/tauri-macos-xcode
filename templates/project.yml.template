@@ -22,9 +22,9 @@ targets:
     info:
       path: {{PRODUCT_NAME}}_macOS/Info.plist
       properties:
-        CFBundleShortVersionString: {{VERSION}}
-        CFBundleVersion: {{VERSION}}
-        LSMinimumSystemVersion: "{{MACOS_DEPLOYMENT_TARGET}}"
+        CFBundleShortVersionString: "$(MARKETING_VERSION)"
+        CFBundleVersion: "$(CURRENT_PROJECT_VERSION)"
+        LSMinimumSystemVersion: "$(MACOSX_DEPLOYMENT_TARGET)"
         NSHighResolutionCapable: true
     entitlements:
       path: {{PRODUCT_NAME}}_macOS/{{PRODUCT_NAME}}_macOS.entitlements
@@ -33,6 +33,8 @@ targets:
         ARCHS: [arm64, x86_64]
         VALID_ARCHS: [arm64, x86_64]
         CODE_SIGN_ALLOW_ENTITLEMENTS_MODIFICATION: YES
+        MARKETING_VERSION: {{VERSION}}
+        CURRENT_PROJECT_VERSION: {{VERSION}}
       groups: [app]
     dependencies:
       - sdk: AppKit.framework
