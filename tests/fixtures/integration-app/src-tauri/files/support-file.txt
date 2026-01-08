@@ -1,0 +1,2 @@
+Support file for integration testing.
+This should be copied to SharedSupport/ in the app bundle.

@@ -1,0 +1,2 @@
+This is a nested resource file for integration testing.
+It should be copied to CustomDir/nested.txt in the app bundle.

@@ -1,0 +1,3 @@
+#!/bin/bash
+# Dummy helper binary for integration testing
+echo "Helper binary executed"

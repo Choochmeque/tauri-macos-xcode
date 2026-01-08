@@ -1,0 +1,63 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "IntegrationTestApp",
+  "version": "1.2.3",
+  "identifier": "com.test.integration",
+  "build": {
+    "beforeDevCommand": "pnpm dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "pnpm build",
+    "frontendDist": "../build"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "IntegrationTestApp",
+        "width": 800,
+        "height": 600
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "category": "Developer Tool",
+    "copyright": "Copyright © 2024 Test",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ],
+    "resources": {
+      "resources/data.json": ".",
+      "resources/subdir/nested.txt": "CustomDir/nested.txt"
+    },
+    "fileAssociations": [
+      {
+        "ext": ["testfile"],
+        "name": "Test File",
+        "role": "Editor"
+      }
+    ],
+    "macOS": {
+      "minimumSystemVersion": "13.0",
+      "infoPlist": "custom-info.plist",
+      "entitlements": "custom.entitlements",
+      "frameworks": [
+        "CoreAudio",
+        "CoreBluetooth",
+        "frameworks/TestLib.dylib"
+      ],
+      "files": {
+        "SharedSupport/support-file.txt": "files/support-file.txt",
+        "MacOS/helper-binary": "files/helper-binary",
+        "PlugIns/plugin.bundle": "files/plugin.bundle"
+      }
+    }
+  }
+}
