@@ -8,7 +8,6 @@ import {
   generateProjectYml,
   valueToYaml,
 } from "../../src/generators/project-yml.js";
-import { generateInfoPlist } from "../../src/generators/info-plist.js";
 import { generateEntitlements } from "../../src/generators/entitlements.js";
 import { generateBuildScript } from "../../src/generators/build-script.js";
 import { generatePodfile } from "../../src/generators/podfile.js";
@@ -787,30 +786,6 @@ describe("generators", () => {
     it("converts unknown types using String()", () => {
       const sym = Symbol("test");
       expect(valueToYaml(sym, 0)).toBe("Symbol(test)");
-    });
-  });
-
-  describe("generateInfoPlist", () => {
-    it("creates Info.plist in correct directory", () => {
-      generateInfoPlist(tempDir, mockAppInfo);
-      const filePath = path.join(tempDir, "TestApp_macOS", "Info.plist");
-      expect(fs.existsSync(filePath)).toBe(true);
-    });
-
-    it("creates target directory if not exists", () => {
-      generateInfoPlist(tempDir, mockAppInfo);
-      const targetDir = path.join(tempDir, "TestApp_macOS");
-      expect(fs.existsSync(targetDir)).toBe(true);
-    });
-
-    it("Info.plist contains correct values", () => {
-      generateInfoPlist(tempDir, mockAppInfo);
-      const content = fs.readFileSync(
-        path.join(tempDir, "TestApp_macOS", "Info.plist"),
-        "utf8",
-      );
-      expect(content).toContain("$(MARKETING_VERSION)");
-      expect(content).toContain("$(MACOSX_DEPLOYMENT_TARGET)");
     });
   });
 

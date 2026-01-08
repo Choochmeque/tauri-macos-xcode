@@ -68,9 +68,9 @@ Line 3: A`);
       const templatesDir = getTemplatesDir();
       const files = fs.readdirSync(templatesDir);
       expect(files).toContain("project.yml.template");
-      expect(files).toContain("Info.plist.template");
       expect(files).toContain("build-rust.sh.template");
       expect(files).toContain("build.swift.template");
+      expect(files).toContain("entitlements.template");
     });
 
     it("throws when package root not found", async () => {
@@ -100,10 +100,10 @@ Line 3: A`);
       expect(content).toContain("{{BUNDLE_IDENTIFIER}}");
     });
 
-    it("reads Info.plist.template", () => {
-      const content = readTemplate("Info.plist.template");
-      expect(content).toContain("$(MARKETING_VERSION)");
-      expect(content).toContain("CFBundleName");
+    it("reads entitlements.template", () => {
+      const content = readTemplate("entitlements.template");
+      expect(content).toContain("<?xml");
+      expect(content).toContain("plist");
     });
 
     it("throws for non-existent template", () => {

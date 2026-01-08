@@ -80,22 +80,6 @@ describe("init command", () => {
     expect(content).toContain("TestApp");
   });
 
-  it("generates Info.plist", async () => {
-    createTauriProject(tempDir);
-
-    await init({ path: tempDir });
-
-    const plistPath = path.join(
-      tempDir,
-      "src-tauri",
-      "gen",
-      "apple-macos",
-      "TestApp_macOS",
-      "Info.plist",
-    );
-    expect(fs.existsSync(plistPath)).toBe(true);
-  });
-
   it("generates entitlements file", async () => {
     createTauriProject(tempDir);
 

@@ -223,8 +223,8 @@ export function generateProjectYml(
       appInfo.fileAssociations,
     );
     content = content.replace(
-      "        NSHighResolutionCapable: true",
-      `        NSHighResolutionCapable: true\n${fileAssocYaml}`,
+      "        NSPrincipalClass: NSApplication",
+      `        NSPrincipalClass: NSApplication\n${fileAssocYaml}`,
     );
   }
 
@@ -240,8 +240,8 @@ export function generateProjectYml(
       if (plistData) {
         const customYaml = plistToInfoPropertiesYaml(plistData);
         content = content.replace(
-          "        NSHighResolutionCapable: true",
-          `        NSHighResolutionCapable: true\n${customYaml}`,
+          "        NSPrincipalClass: NSApplication",
+          `        NSPrincipalClass: NSApplication\n${customYaml}`,
         );
       } else {
         console.warn(

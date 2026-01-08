@@ -7,7 +7,6 @@ import {
   detectPackageManager,
 } from "../core/project-discovery.js";
 import { generateProjectYml } from "../generators/project-yml.js";
-import { generateInfoPlist } from "../generators/info-plist.js";
 import { generateEntitlements } from "../generators/entitlements.js";
 import { generateAssets } from "../generators/assets.js";
 import { generateBuildScript } from "../generators/build-script.js";
@@ -55,7 +54,6 @@ export async function init(options: InitOptions): Promise<void> {
 
   // Generate files
   generateProjectYml(macosDir, appInfo, projectRoot);
-  generateInfoPlist(macosDir, appInfo);
   await generateAssets(macosDir, appInfo, projectRoot);
   generateBuildScript(macosDir);
   generatePodfile(macosDir, appInfo);
