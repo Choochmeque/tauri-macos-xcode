@@ -747,6 +747,32 @@ describe("generators", () => {
       expect(content).toContain("EmptyDict: {}");
       fs.rmSync(projectRoot, { recursive: true });
     });
+
+    it("project.yml ignores infoPlist with array root instead of dict", () => {
+      const projectRoot = fs.mkdtempSync(
+        path.join(os.tmpdir(), "tauri-project-"),
+      );
+      const srcTauri = path.join(projectRoot, "src-tauri");
+      fs.mkdirSync(srcTauri, { recursive: true });
+      const plistContent = `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<array>
+    <string>item1</string>
+    <string>item2</string>
+</array>
+</plist>`;
+      fs.writeFileSync(path.join(srcTauri, "array.plist"), plistContent);
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
+
+      const appInfo = { ...mockAppInfo, infoPlist: "array.plist" };
+      generateProjectYml(tempDir, appInfo, projectRoot);
+
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining("Could not parse Info.plist"),
+      );
+      fs.rmSync(projectRoot, { recursive: true });
+    });
   });
 
   describe("valueToYaml", () => {

@@ -56,7 +56,6 @@ export async function init(options: InitOptions): Promise<void> {
   // Generate files
   generateProjectYml(macosDir, appInfo, projectRoot);
   generateInfoPlist(macosDir, appInfo);
-  generateEntitlements(macosDir, appInfo, projectRoot);
   await generateAssets(macosDir, appInfo, projectRoot);
   generateBuildScript(macosDir);
   generatePodfile(macosDir, appInfo);
@@ -69,6 +68,9 @@ export async function init(options: InitOptions): Promise<void> {
 
   // Run XcodeGen
   await runXcodeGen(macosDir);
+
+  // Generate entitlements AFTER XcodeGen (XcodeGen may create empty entitlements)
+  generateEntitlements(macosDir, appInfo, projectRoot);
 
   console.log("");
 
