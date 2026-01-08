@@ -1,6 +1,7 @@
 import fs from "fs";
 import path from "path";
-import { parse as parsePlist } from "plist";
+import plist from "plist";
+const { parse: parsePlist } = plist;
 import { AppInfo, TemplateVars, FileAssociation } from "../types.js";
 import { processTemplate } from "../utils/template.js";
 
