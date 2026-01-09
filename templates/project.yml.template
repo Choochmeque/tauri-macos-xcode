@@ -8,6 +8,9 @@ fileGroups: [../../src]
 configs:
   debug: debug
   release: release
+settings:
+  base:
+    DEAD_CODE_STRIPPING: YES
 settingGroups:
   app:
     base:
@@ -39,7 +42,6 @@ targets:
         ARCHS: [arm64, x86_64]
         VALID_ARCHS: [arm64, x86_64]
         CODE_SIGN_ALLOW_ENTITLEMENTS_MODIFICATION: YES
-        DEAD_CODE_STRIPPING: YES
         ENABLE_USER_SCRIPT_SANDBOXING: NO
         GENERATE_INFOPLIST_FILE: YES
         OTHER_CODE_SIGN_FLAGS: --deep
