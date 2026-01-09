@@ -275,6 +275,40 @@ describe("Integration: Build Command", () => {
         expect(fs.existsSync(resourcePath)).toBe(true);
       });
 
+      it("copies glob-expanded a.json to Contents/Resources/globbed/", () => {
+        const resourcePath = path.join(
+          appBundlePath,
+          "Contents",
+          "Resources",
+          "globbed",
+          "a.json",
+        );
+        expect(fs.existsSync(resourcePath)).toBe(true);
+      });
+
+      it("copies glob-expanded b.json to Contents/Resources/globbed/", () => {
+        const resourcePath = path.join(
+          appBundlePath,
+          "Contents",
+          "Resources",
+          "globbed",
+          "b.json",
+        );
+        expect(fs.existsSync(resourcePath)).toBe(true);
+      });
+
+      it("copies glob-expanded nested/c.json to Contents/Resources/globbed/nested/", () => {
+        const resourcePath = path.join(
+          appBundlePath,
+          "Contents",
+          "Resources",
+          "globbed",
+          "nested",
+          "c.json",
+        );
+        expect(fs.existsSync(resourcePath)).toBe(true);
+      });
+
       it("copies support-file.txt to Contents/SharedSupport/", () => {
         const filePath = path.join(
           appBundlePath,

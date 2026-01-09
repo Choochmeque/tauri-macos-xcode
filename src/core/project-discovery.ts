@@ -6,6 +6,7 @@ import {
   ResourceMapping,
   FileAssociation,
 } from "../types.js";
+import { expandGlob, getGlobBase } from "./glob-utils.js";
 
 export function findProjectRoot(startDir: string = process.cwd()): string {
   let dir = startDir;
@@ -28,19 +29,47 @@ export function readTauriConfig(projectRoot: string): TauriConfig {
 
 function parseResources(
   resources: string[] | Record<string, string> | undefined,
+  basePath?: string,
 ): ResourceMapping[] | undefined {
   if (!resources) return undefined;
 
+  const cwd = basePath || process.cwd();
+  const results: ResourceMapping[] = [];
+
   if (Array.isArray(resources)) {
-    // Array format: ["path/to/file"] → copies to Resources root
-    return resources.map((source) => ({ source, target: "" }));
+    // Array format: ["path/to/file", "pattern/*.json"] → copies to Resources root
+    for (const pattern of resources) {
+      const files = expandGlob(pattern, cwd);
+      for (const file of files) {
+        results.push({ source: file, target: "" });
+      }
+    }
+    return results.length > 0 ? results : undefined;
   }
 
-  // Object format: { "source/path": "target/path" }
-  return Object.entries(resources).map(([source, target]) => ({
-    source,
-    target,
-  }));
+  // Object format: { "source/path": "target/path", "pattern/**": "dest" }
+  for (const [pattern, target] of Object.entries(resources)) {
+    const files = expandGlob(pattern, cwd);
+    const globBase = getGlobBase(pattern);
+
+    for (const file of files) {
+      // Calculate relative path from glob base for directory preservation
+      const relativePath = globBase ? file.slice(globBase.length + 1) : file;
+
+      // Normalize target: "." means root
+      const normalizedTarget =
+        target === "." || target === "./" ? "" : target.replace(/^\.\//, "");
+
+      // Combine target with relative path
+      const finalTarget = normalizedTarget
+        ? path.posix.join(normalizedTarget, relativePath)
+        : relativePath;
+
+      results.push({ source: file, target: finalTarget });
+    }
+  }
+
+  return results.length > 0 ? results : undefined;
 }
 
 function parseFileAssociations(
@@ -55,11 +84,16 @@ function parseFileAssociations(
   }));
 }
 
-export function getAppInfo(config: TauriConfig): AppInfo {
+export function getAppInfo(config: TauriConfig, projectRoot?: string): AppInfo {
   const identifier =
     config.identifier || config.bundle?.identifier || "com.example.app";
   const parts = identifier.split(".");
   const bundleIdPrefix = parts.slice(0, -1).join(".");
+
+  // basePath for glob expansion is src-tauri directory
+  const basePath = projectRoot
+    ? path.join(projectRoot, "src-tauri")
+    : undefined;
 
   return {
     productName: config.productName || "TauriApp",
@@ -71,7 +105,7 @@ export function getAppInfo(config: TauriConfig): AppInfo {
     copyright: config.bundle?.copyright,
     files: config.bundle?.macOS?.files,
     frameworks: config.bundle?.macOS?.frameworks,
-    resources: parseResources(config.bundle?.resources),
+    resources: parseResources(config.bundle?.resources, basePath),
     fileAssociations: parseFileAssociations(config.bundle?.fileAssociations),
     entitlements: config.bundle?.macOS?.entitlements,
     infoPlist: config.bundle?.macOS?.infoPlist,

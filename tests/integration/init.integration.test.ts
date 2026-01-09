@@ -132,6 +132,19 @@ describe("Integration: Init Command", () => {
       expect(projectYml).toContain("subpath: CustomDir");
     });
 
+    it("expands glob patterns for resources", () => {
+      // resources/glob/**/*.json should expand to a.json, b.json, nested/c.json
+      expect(projectYml).toContain("path: ../../resources/glob/a.json");
+      expect(projectYml).toContain("path: ../../resources/glob/b.json");
+      expect(projectYml).toContain("path: ../../resources/glob/nested/c.json");
+    });
+
+    it("preserves relative paths in glob expansion with target", () => {
+      // glob pattern with target "globbed" should preserve nested structure
+      expect(projectYml).toContain("subpath: globbed");
+      expect(projectYml).toContain("subpath: globbed/nested");
+    });
+
     it("contains files copyFiles for SharedSupport", () => {
       expect(projectYml).toContain("path: ../../files/support-file.txt");
       expect(projectYml).toContain("destination: sharedSupport");

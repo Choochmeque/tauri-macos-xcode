@@ -35,7 +35,7 @@ function updatePackageJson(projectRoot: string): void {
 export async function init(options: InitOptions): Promise<void> {
   const projectRoot = options.path || findProjectRoot();
   const tauriConfig = readTauriConfig(projectRoot);
-  const appInfo = getAppInfo(tauriConfig);
+  const appInfo = getAppInfo(tauriConfig, projectRoot);
 
   const macosDir = path.join(projectRoot, "src-tauri", "gen", "apple-macos");
 

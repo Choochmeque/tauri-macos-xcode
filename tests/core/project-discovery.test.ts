@@ -192,19 +192,35 @@ describe("project-discovery", () => {
     });
 
     it("reads resources from bundle.resources array format", () => {
+      // Create src-tauri directory and files for glob expansion
+      const srcTauri = path.join(tempDir, "src-tauri");
+      fs.mkdirSync(path.join(srcTauri, "assets"), { recursive: true });
+      fs.mkdirSync(path.join(srcTauri, "config"), { recursive: true });
+      fs.writeFileSync(path.join(srcTauri, "assets", "data.json"), "{}");
+      fs.writeFileSync(path.join(srcTauri, "config", "app.json"), "{}");
+      fs.writeFileSync(path.join(srcTauri, "config", "settings.json"), "{}");
+
       const config = {
         bundle: {
           resources: ["assets/data.json", "config/**"],
         },
       };
-      const info = getAppInfo(config);
+      const info = getAppInfo(config, tempDir);
       expect(info.resources).toEqual([
         { source: "assets/data.json", target: "" },
-        { source: "config/**", target: "" },
+        { source: "config/app.json", target: "" },
+        { source: "config/settings.json", target: "" },
       ]);
     });
 
     it("reads resources from bundle.resources object format", () => {
+      // Create src-tauri directory and files for glob expansion
+      const srcTauri = path.join(tempDir, "src-tauri");
+      fs.mkdirSync(path.join(srcTauri, "infoplist"), { recursive: true });
+      fs.mkdirSync(path.join(srcTauri, "data"), { recursive: true });
+      fs.writeFileSync(path.join(srcTauri, "infoplist", "Info.plist"), "");
+      fs.writeFileSync(path.join(srcTauri, "data", "config.json"), "{}");
+
       const config = {
         bundle: {
           resources: {
@@ -213,15 +229,171 @@ describe("project-discovery", () => {
           },
         },
       };
-      const info = getAppInfo(config);
+      const info = getAppInfo(config, tempDir);
       expect(info.resources).toEqual([
-        { source: "infoplist/**", target: "./" },
-        { source: "data/config.json", target: "configs" },
+        { source: "infoplist/Info.plist", target: "Info.plist" },
+        { source: "data/config.json", target: "configs/config.json" },
       ]);
     });
 
     it("resources is undefined when not specified", () => {
       const config = { bundle: {} };
+      const info = getAppInfo(config);
+      expect(info.resources).toBeUndefined();
+    });
+
+    it("normalizes ./ prefix in resource patterns", () => {
+      const srcTauri = path.join(tempDir, "src-tauri");
+      fs.mkdirSync(path.join(srcTauri, "resources"), { recursive: true });
+      fs.writeFileSync(path.join(srcTauri, "resources", "data.json"), "{}");
+
+      const config = {
+        bundle: {
+          resources: ["./resources/data.json"],
+        },
+      };
+      const info = getAppInfo(config, tempDir);
+      expect(info.resources).toEqual([
+        { source: "resources/data.json", target: "" },
+      ]);
+    });
+
+    it("expands *.json single-level wildcard", () => {
+      const srcTauri = path.join(tempDir, "src-tauri");
+      fs.mkdirSync(path.join(srcTauri, "data"), { recursive: true });
+      fs.writeFileSync(path.join(srcTauri, "data", "a.json"), "{}");
+      fs.writeFileSync(path.join(srcTauri, "data", "b.json"), "{}");
+      fs.writeFileSync(path.join(srcTauri, "data", "readme.txt"), "");
+
+      const config = {
+        bundle: {
+          resources: ["data/*.json"],
+        },
+      };
+      const info = getAppInfo(config, tempDir);
+      expect(info.resources).toHaveLength(2);
+      expect(info.resources).toContainEqual({
+        source: "data/a.json",
+        target: "",
+      });
+      expect(info.resources).toContainEqual({
+        source: "data/b.json",
+        target: "",
+      });
+    });
+
+    it("expands ** recursive wildcard", () => {
+      const srcTauri = path.join(tempDir, "src-tauri");
+      fs.mkdirSync(path.join(srcTauri, "resources", "subdir"), {
+        recursive: true,
+      });
+      fs.writeFileSync(path.join(srcTauri, "resources", "a.json"), "{}");
+      fs.writeFileSync(
+        path.join(srcTauri, "resources", "subdir", "b.json"),
+        "{}",
+      );
+
+      const config = {
+        bundle: {
+          resources: ["resources/**"],
+        },
+      };
+      const info = getAppInfo(config, tempDir);
+      expect(info.resources).toHaveLength(2);
+      expect(info.resources).toContainEqual({
+        source: "resources/a.json",
+        target: "",
+      });
+      expect(info.resources).toContainEqual({
+        source: "resources/subdir/b.json",
+        target: "",
+      });
+    });
+
+    it("preserves relative paths in object format with glob", () => {
+      const srcTauri = path.join(tempDir, "src-tauri");
+      fs.mkdirSync(path.join(srcTauri, "configs", "nested"), {
+        recursive: true,
+      });
+      fs.writeFileSync(path.join(srcTauri, "configs", "app.json"), "{}");
+      fs.writeFileSync(
+        path.join(srcTauri, "configs", "nested", "deep.json"),
+        "{}",
+      );
+
+      const config = {
+        bundle: {
+          resources: {
+            "configs/**/*.json": "data",
+          },
+        },
+      };
+      const info = getAppInfo(config, tempDir);
+      expect(info.resources).toHaveLength(2);
+      expect(info.resources).toContainEqual({
+        source: "configs/app.json",
+        target: "data/app.json",
+      });
+      expect(info.resources).toContainEqual({
+        source: "configs/nested/deep.json",
+        target: "data/nested/deep.json",
+      });
+    });
+
+    it("returns undefined when array resources match no files", () => {
+      const srcTauri = path.join(tempDir, "src-tauri");
+      fs.mkdirSync(srcTauri, { recursive: true });
+
+      const config = {
+        bundle: {
+          resources: ["nonexistent/**/*.json"],
+        },
+      };
+      const info = getAppInfo(config, tempDir);
+      expect(info.resources).toBeUndefined();
+    });
+
+    it("returns undefined when object resources match no files", () => {
+      const srcTauri = path.join(tempDir, "src-tauri");
+      fs.mkdirSync(srcTauri, { recursive: true });
+
+      const config = {
+        bundle: {
+          resources: {
+            "nonexistent/**/*.json": "dest",
+          },
+        },
+      };
+      const info = getAppInfo(config, tempDir);
+      expect(info.resources).toBeUndefined();
+    });
+
+    it("handles object resources with literal path (no glob)", () => {
+      const srcTauri = path.join(tempDir, "src-tauri");
+      fs.mkdirSync(srcTauri, { recursive: true });
+      fs.writeFileSync(path.join(srcTauri, "data.json"), "{}");
+
+      const config = {
+        bundle: {
+          resources: {
+            "data.json": "configs",
+          },
+        },
+      };
+      const info = getAppInfo(config, tempDir);
+      expect(info.resources).toEqual([
+        { source: "data.json", target: "configs/data.json" },
+      ]);
+    });
+
+    it("uses process.cwd() as fallback when no projectRoot provided", () => {
+      // When getAppInfo is called without projectRoot, parseResources uses process.cwd()
+      // Since pattern won't match any files in cwd, resources will be undefined
+      const config = {
+        bundle: {
+          resources: ["nonexistent-test-pattern-xyz/**"],
+        },
+      };
       const info = getAppInfo(config);
       expect(info.resources).toBeUndefined();
     });
