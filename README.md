@@ -98,10 +98,18 @@ Starts the frontend dev server (reads `build.beforeDevCommand` from tauri.conf.j
 The tool reads configuration from your `tauri.conf.json`:
 
 - `productName` - App name
-- `identifier` - Bundle identifier
+- `identifier` (or `bundle.identifier`) - Bundle identifier
 - `version` - App version
 - `build.beforeDevCommand` - Command to start dev server
-- `build.devUrl` - Dev server URL
+- `bundle.category` - App Store category
+- `bundle.copyright` - Copyright string
+- `bundle.resources` - Resource files to bundle (supports glob patterns)
+- `bundle.fileAssociations` - File type associations
+- `bundle.macOS.minimumSystemVersion` - Minimum macOS version (default: 11.0)
+- `bundle.macOS.files` - Additional files to copy into the app bundle
+- `bundle.macOS.frameworks` - System or custom frameworks to link
+- `bundle.macOS.entitlements` - Custom entitlements file path
+- `bundle.macOS.infoPlist` - Custom Info.plist to merge
 
 ## App Icons
 
