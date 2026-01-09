@@ -48,11 +48,7 @@
       "minimumSystemVersion": "13.0",
       "infoPlist": "custom-info.plist",
       "entitlements": "custom.entitlements",
-      "frameworks": [
-        "CoreAudio",
-        "CoreBluetooth",
-        "frameworks/TestLib.dylib"
-      ],
+      "frameworks": ["CoreAudio", "CoreBluetooth", "frameworks/TestLib.dylib"],
       "files": {
         "SharedSupport/support-file.txt": "files/support-file.txt",
         "MacOS/helper-binary": "files/helper-binary",

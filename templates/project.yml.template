@@ -39,6 +39,8 @@ targets:
         ARCHS: [arm64, x86_64]
         VALID_ARCHS: [arm64, x86_64]
         CODE_SIGN_ALLOW_ENTITLEMENTS_MODIFICATION: YES
+        GENERATE_INFOPLIST_FILE: YES
+        OTHER_CODE_SIGN_FLAGS: --deep
         MARKETING_VERSION: {{VERSION}}
         CURRENT_PROJECT_VERSION: {{VERSION}}
       groups: [app]

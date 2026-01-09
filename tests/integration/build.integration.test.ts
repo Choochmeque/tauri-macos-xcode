@@ -42,92 +42,93 @@ describe("Integration: Build Command", () => {
   const canRunBuildTests =
     hasXcodegen && hasXcodebuild && hasArm64Target && hasX86Target;
 
-  beforeAll(
-    async () => {
-      if (!canRunBuildTests) {
-        const missing: string[] = [];
-        if (!hasXcodegen) missing.push("XcodeGen");
-        if (!hasXcodebuild) missing.push("xcodebuild");
-        if (!hasArm64Target) missing.push("aarch64-apple-darwin target");
-        if (!hasX86Target) missing.push("x86_64-apple-darwin target");
-        console.warn(
-          `Build tests skipped - missing prerequisites: ${missing.join(", ")}`
-        );
-        return;
-      }
-
-      // Copy fixture to temp directory
-      testDir = fs.mkdtempSync(path.join(os.tmpdir(), "tauri-build-test-"));
-      fs.cpSync(FIXTURE_PATH, testDir, { recursive: true });
-
-      // Silence console output during init
-      vi.spyOn(console, "log").mockImplementation(() => {});
-      vi.spyOn(console, "warn").mockImplementation(() => {});
-
-      // Run init command
-      await init({ path: testDir });
-
-      macosDir = path.join(testDir, "src-tauri", "gen", "apple-macos");
-
-      // Run xcodebuild for universal binary
-      console.log("Building universal binary...");
-      const buildResult = spawnSync(
-        "xcodebuild",
-        [
-          "-project",
-          "IntegrationTestApp.xcodeproj",
-          "-scheme",
-          "IntegrationTestApp_macOS",
-          "-configuration",
-          "Debug",
-          "ARCHS=arm64 x86_64",
-          "ONLY_ACTIVE_ARCH=NO",
-          "build",
-        ],
-        {
-          cwd: macosDir,
-          stdio: "pipe",
-          encoding: "utf8",
-          timeout: 600000, // 10 minutes
-        }
+  beforeAll(async () => {
+    if (!canRunBuildTests) {
+      const missing: string[] = [];
+      if (!hasXcodegen) missing.push("XcodeGen");
+      if (!hasXcodebuild) missing.push("xcodebuild");
+      if (!hasArm64Target) missing.push("aarch64-apple-darwin target");
+      if (!hasX86Target) missing.push("x86_64-apple-darwin target");
+      console.warn(
+        `Build tests skipped - missing prerequisites: ${missing.join(", ")}`,
       );
+      return;
+    }
 
-      if (buildResult.status !== 0) {
-        console.error("xcodebuild failed:", buildResult.stderr);
-        throw new Error(`xcodebuild failed with status ${buildResult.status}`);
-      }
+    // Copy fixture to temp directory (exclude target/ and node_modules/)
+    testDir = fs.mkdtempSync(path.join(os.tmpdir(), "tauri-build-test-"));
+    fs.cpSync(FIXTURE_PATH, testDir, {
+      recursive: true,
+      filter: (src) =>
+        !src.includes("/target/") && !src.includes("/node_modules/"),
+    });
 
-      // Find the app bundle in the build output
-      // xcodebuild outputs to DerivedData or BUILD_DIR
-      const showBuildSettings = spawnSync(
-        "xcodebuild",
-        [
-          "-project",
-          "IntegrationTestApp.xcodeproj",
-          "-scheme",
-          "IntegrationTestApp_macOS",
-          "-configuration",
-          "Debug",
-          "-showBuildSettings",
-        ],
-        {
-          cwd: macosDir,
-          encoding: "utf8",
-        }
+    // Silence console output during init
+    vi.spyOn(console, "log").mockImplementation(() => {});
+    vi.spyOn(console, "warn").mockImplementation(() => {});
+
+    // Run init command
+    await init({ path: testDir });
+
+    macosDir = path.join(testDir, "src-tauri", "gen", "apple-macos");
+
+    // Run xcodebuild for universal binary
+    console.log("Building universal binary...");
+    const buildResult = spawnSync(
+      "xcodebuild",
+      [
+        "-project",
+        "IntegrationTestApp.xcodeproj",
+        "-scheme",
+        "IntegrationTestApp_macOS",
+        "-configuration",
+        "Debug",
+        "ARCHS=arm64 x86_64",
+        "ONLY_ACTIVE_ARCH=NO",
+        "build",
+      ],
+      {
+        cwd: macosDir,
+        stdio: "pipe",
+        encoding: "utf8",
+        timeout: 600000, // 10 minutes
+      },
+    );
+
+    if (buildResult.status !== 0) {
+      console.error("xcodebuild failed:", buildResult.stderr);
+      throw new Error(`xcodebuild failed with status ${buildResult.status}`);
+    }
+
+    // Find the app bundle in the build output
+    // xcodebuild outputs to DerivedData or BUILD_DIR
+    const showBuildSettings = spawnSync(
+      "xcodebuild",
+      [
+        "-project",
+        "IntegrationTestApp.xcodeproj",
+        "-scheme",
+        "IntegrationTestApp_macOS",
+        "-configuration",
+        "Debug",
+        "-showBuildSettings",
+      ],
+      {
+        cwd: macosDir,
+        encoding: "utf8",
+      },
+    );
+
+    const builtProductsDirMatch = showBuildSettings.stdout.match(
+      /BUILT_PRODUCTS_DIR = (.+)/,
+    );
+    if (builtProductsDirMatch) {
+      appBundlePath = path.join(
+        builtProductsDirMatch[1].trim(),
+        "IntegrationTestApp.app",
       );
-
-      const builtProductsDirMatch = showBuildSettings.stdout.match(
-        /BUILT_PRODUCTS_DIR = (.+)/
-      );
-      if (builtProductsDirMatch) {
-        appBundlePath = path.join(
-          builtProductsDirMatch[1].trim(),
-          "IntegrationTestApp.app"
-        );
-      }
-    },
-    660000
-  ); // 11 minutes timeout for beforeAll
+    }
+  }, 660000); // 11 minutes timeout for beforeAll
 
   afterAll(() => {
     vi.restoreAllMocks();
@@ -153,7 +154,7 @@ describe("Integration: Build Command", () => {
         appBundlePath,
         "Contents",
         "MacOS",
-        "IntegrationTestApp"
+        "IntegrationTestApp",
       );
       expect(fs.existsSync(binaryPath)).toBe(true);
     });
@@ -175,7 +176,7 @@ describe("Integration: Build Command", () => {
         appBundlePath,
         "Contents",
         "MacOS",
-        "IntegrationTestApp"
+        "IntegrationTestApp",
       );
 
       const lipoResult = spawnSync("lipo", ["-info", binaryPath], {
@@ -217,7 +218,7 @@ describe("Integration: Build Command", () => {
 
     it("has correct LSApplicationCategoryType", () => {
       expect(infoPlist.LSApplicationCategoryType).toBe(
-        "public.app-category.developer-tools"
+        "public.app-category.developer-tools",
       );
     });
 
@@ -239,7 +240,7 @@ describe("Integration: Build Command", () => {
       expect(docTypes.length).toBeGreaterThan(0);
 
       const testFileType = docTypes.find(
-        (dt) => dt.CFBundleTypeName === "Test File"
+        (dt) => dt.CFBundleTypeName === "Test File",
       );
       expect(testFileType).toBeDefined();
       expect(testFileType?.CFBundleTypeExtensions).toContain("testfile");
@@ -255,7 +256,7 @@ describe("Integration: Build Command", () => {
           appBundlePath,
           "Contents",
           "Resources",
-          "data.json"
+          "data.json",
         );
         expect(fs.existsSync(resourcePath)).toBe(true);
 
@@ -269,7 +270,7 @@ describe("Integration: Build Command", () => {
           "Contents",
           "Resources",
           "CustomDir",
-          "nested.txt"
+          "nested.txt",
         );
         expect(fs.existsSync(resourcePath)).toBe(true);
       });
@@ -279,7 +280,7 @@ describe("Integration: Build Command", () => {
           appBundlePath,
           "Contents",
           "SharedSupport",
-          "support-file.txt"
+          "support-file.txt",
         );
         expect(fs.existsSync(filePath)).toBe(true);
       });
@@ -289,7 +290,7 @@ describe("Integration: Build Command", () => {
           appBundlePath,
           "Contents",
           "MacOS",
-          "helper-binary"
+          "helper-binary",
         );
         expect(fs.existsSync(filePath)).toBe(true);
       });
@@ -299,7 +300,7 @@ describe("Integration: Build Command", () => {
           appBundlePath,
           "Contents",
           "PlugIns",
-          "plugin.bundle"
+          "plugin.bundle",
         );
         expect(fs.existsSync(pluginPath)).toBe(true);
 
@@ -313,11 +314,11 @@ describe("Integration: Build Command", () => {
           appBundlePath,
           "Contents",
           "Frameworks",
-          "TestLib.dylib"
+          "TestLib.dylib",
         );
         expect(fs.existsSync(frameworkPath)).toBe(true);
       });
-    }
+    },
   );
 
   describe("Entitlements applied", { skip: !canRunBuildTests }, () => {
@@ -328,20 +329,95 @@ describe("Integration: Build Command", () => {
         ["-d", "--entitlements", "-", "--xml", appBundlePath],
         {
           encoding: "utf8",
-        }
+        },
       );
 
       // If the app is not signed, codesign may return an error
       // In that case, we skip this test
       if (codesignResult.status !== 0) {
-        console.warn(
-          "App is not signed, skipping entitlements verification"
-        );
+        console.warn("App is not signed, skipping entitlements verification");
         return;
       }
 
       const entitlementsXml = codesignResult.stdout;
       expect(entitlementsXml).toContain("com.apple.security.network.client");
+    });
+  });
+
+  describe("Code signing verification", { skip: !canRunBuildTests }, () => {
+    it("helper-binary is code signed", () => {
+      const binaryPath = path.join(
+        appBundlePath,
+        "Contents",
+        "MacOS",
+        "helper-binary",
+      );
+      const codesignResult = spawnSync(
+        "codesign",
+        ["-v", "--strict", binaryPath],
+        { encoding: "utf8" },
+      );
+      expect(codesignResult.status).toBe(0);
+    });
+
+    it("plugin.bundle is code signed", () => {
+      const pluginPath = path.join(
+        appBundlePath,
+        "Contents",
+        "PlugIns",
+        "plugin.bundle",
+      );
+      const codesignResult = spawnSync(
+        "codesign",
+        ["-v", "--strict", pluginPath],
+        { encoding: "utf8" },
+      );
+      expect(codesignResult.status).toBe(0);
+    });
+
+    it("TestLib.dylib is code signed", () => {
+      const dylibPath = path.join(
+        appBundlePath,
+        "Contents",
+        "Frameworks",
+        "TestLib.dylib",
+      );
+      const codesignResult = spawnSync(
+        "codesign",
+        ["-v", "--strict", dylibPath],
+        { encoding: "utf8" },
+      );
+      expect(codesignResult.status).toBe(0);
+    });
+  });
+
+  describe("App icon assets", { skip: !canRunBuildTests }, () => {
+    it("contains compiled Assets.car", () => {
+      const assetsPath = path.join(
+        appBundlePath,
+        "Contents",
+        "Resources",
+        "Assets.car",
+      );
+      expect(fs.existsSync(assetsPath)).toBe(true);
+    });
+  });
+
+  describe("Build script execution", { skip: !canRunBuildTests }, () => {
+    it("Rust binary exists (build-rust.sh executed)", () => {
+      // The build-rust.sh script copies the Rust binary to Contents/MacOS/
+      // The main binary is IntegrationTestApp
+      const binaryPath = path.join(
+        appBundlePath,
+        "Contents",
+        "MacOS",
+        "IntegrationTestApp",
+      );
+      expect(fs.existsSync(binaryPath)).toBe(true);
+
+      // Verify it's a proper Mach-O binary (not empty or placeholder)
+      const stats = fs.statSync(binaryPath);
+      expect(stats.size).toBeGreaterThan(1000); // Real binary should be > 1KB
     });
   });
 });

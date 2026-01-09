@@ -289,7 +289,7 @@ export function generateProjectYml(
   // Add embedded frameworks
   if (embeddedFrameworks.length > 0) {
     const frameworkDeps = embeddedFrameworks
-      .map((fw) => `      - framework: ${fw}\n        embed: true`)
+      .map((fw) => `      - framework: ../../${fw}\n        embed: true`)
       .join("\n");
     content = content.replace(
       "      - sdk: WebKit.framework",
@@ -297,15 +297,25 @@ export function generateProjectYml(
     );
   }
 
-  // Collect all files to copy (from both appInfo.files and dylibs)
-  // XcodeGen copyFiles uses destination keywords, not paths
-  // Group files by destination folder
-  interface CopyFileEntry {
+  // Add dylibs as embedded dependencies (Xcode will sign them)
+  if (dylibs.length > 0) {
+    const dylibDeps = dylibs
+      .map((fw) => `      - framework: ../../${fw}\n        embed: true`)
+      .join("\n");
+    content = content.replace(
+      "      - sdk: WebKit.framework",
+      `      - sdk: WebKit.framework\n${dylibDeps}`,
+    );
+  }
+
+  // Collect files to copy as sources with buildPhase.copyFiles
+  // XcodeGen requires files to be in sources with buildPhase configuration
+  interface CopyFileSource {
+    path: string;
     destination: string;
     subpath?: string;
-    files: string[];
   }
-  const copyGroups: Map<string, CopyFileEntry> = new Map();
+  const copyFileSources: CopyFileSource[] = [];
 
   // Map known directories to XcodeGen destinations
   const dirMap: Record<string, string> = {
@@ -346,69 +356,91 @@ export function generateProjectYml(
     };
   }
 
+  // Collect files that need code signing (executables, plugins) as dependencies
+  // and other files as copyFiles sources
+  const embeddedDeps: { path: string; destination: string }[] = [];
+
   // Add user-specified files
   if (appInfo.files) {
     for (const [dest, src] of Object.entries(appInfo.files)) {
       const parsed = parseTauriDestination(dest);
-      const groupKey = `${parsed.destination}:${parsed.subpath || ""}`;
 
-      if (!copyGroups.has(groupKey)) {
-        copyGroups.set(groupKey, {
+      // Files going to executables or plugins need code signing - use dependency syntax
+      if (
+        parsed.destination === "executables" ||
+        parsed.destination === "plugins"
+      ) {
+        embeddedDeps.push({
+          path: `../../${src}`,
+          destination: parsed.destination,
+        });
+      } else {
+        copyFileSources.push({
+          path: `../../${src}`,
           destination: parsed.destination,
           subpath: parsed.subpath,
-          files: [],
         });
       }
-      copyGroups.get(groupKey)!.files.push(src);
     }
   }
 
-  // Add dylibs to be copied to Frameworks directory
-  for (const dylib of dylibs) {
-    const groupKey = "frameworks:";
-    if (!copyGroups.has(groupKey)) {
-      copyGroups.set(groupKey, {
-        destination: "frameworks",
-        files: [],
-      });
-    }
-    copyGroups.get(groupKey)!.files.push(dylib);
+  // Add embedded dependencies (executables, plugins) - Xcode will sign them
+  if (embeddedDeps.length > 0) {
+    const depEntries = embeddedDeps
+      .map(
+        (dep) =>
+          `      - framework: ${dep.path}\n        embed: true\n        codeSign: true\n        copy:\n          destination: ${dep.destination}`,
+      )
+      .join("\n");
+    content = content.replace(
+      "      - sdk: WebKit.framework",
+      `      - sdk: WebKit.framework\n${depEntries}`,
+    );
   }
+
+  // Note: dylibs are handled as dependencies with embed: true above,
+  // so they don't need to be added as copyFiles sources
 
   // Add resources to be copied to Resources directory
   if (appInfo.resources && appInfo.resources.length > 0) {
     for (const resource of appInfo.resources) {
-      const subpath = resource.target || undefined;
-      const groupKey = `resources:${subpath || ""}`;
-
-      if (!copyGroups.has(groupKey)) {
-        copyGroups.set(groupKey, {
-          destination: "resources",
-          subpath,
-          files: [],
-        });
+      // Extract directory part of target (ignore "." which means root)
+      let subpath: string | undefined;
+      if (resource.target && resource.target !== ".") {
+        // Get directory part only (XcodeGen subpath is directory, not full path)
+        const lastSlash = resource.target.lastIndexOf("/");
+        subpath =
+          lastSlash > 0
+            ? resource.target.substring(0, lastSlash)
+            : resource.target;
+        // If target has no slash and looks like a directory (no extension), use it as subpath
+        // If it looks like a file (has extension), it's in root
+        if (lastSlash === -1 && resource.target.includes(".")) {
+          subpath = undefined;
+        }
       }
-      copyGroups.get(groupKey)!.files.push(resource.source);
+      copyFileSources.push({
+        path: `../../${resource.source}`,
+        destination: "resources",
+        subpath,
+      });
     }
   }
 
-  // Add copyFiles section if there are files to copy
-  if (copyGroups.size > 0) {
-    const copyEntries: string[] = [];
-    for (const group of copyGroups.values()) {
-      let entry = `      - destination: ${group.destination}`;
-      if (group.subpath) {
-        entry += `\n        subpath: ${group.subpath}`;
+  // Add sources with buildPhase.copyFiles configuration
+  if (copyFileSources.length > 0) {
+    const sourceEntries: string[] = [];
+    for (const source of copyFileSources) {
+      let entry = `      - path: ${source.path}\n        buildPhase:\n          copyFiles:\n            destination: ${source.destination}`;
+      if (source.subpath) {
+        entry += `\n            subpath: ${source.subpath}`;
       }
-      entry += "\n        files:";
-      for (const file of group.files) {
-        entry += `\n          - path: ${file}`;
-      }
-      copyEntries.push(entry);
+      sourceEntries.push(entry);
     }
+    // Insert after the existing sources (after {{PRODUCT_NAME}}_macOS)
     content = content.replace(
-      "    postCompileScripts:",
-      `    copyFiles:\n${copyEntries.join("\n")}\n    postCompileScripts:`,
+      `      - path: ${appInfo.productName}_macOS`,
+      `      - path: ${appInfo.productName}_macOS\n${sourceEntries.join("\n")}`,
     );
   }
 

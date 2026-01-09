@@ -27,9 +27,13 @@ describe("Integration: Init Command", () => {
       console.warn("XcodeGen not installed - some tests will be skipped");
     }
 
-    // Copy fixture to temp directory
+    // Copy fixture to temp directory (exclude target/ and node_modules/)
     testDir = fs.mkdtempSync(path.join(os.tmpdir(), "tauri-integration-"));
-    fs.cpSync(FIXTURE_PATH, testDir, { recursive: true });
+    fs.cpSync(FIXTURE_PATH, testDir, {
+      recursive: true,
+      filter: (src) =>
+        !src.includes("/target/") && !src.includes("/node_modules/"),
+    });
 
     // Silence console output during init
     vi.spyOn(console, "log").mockImplementation(() => {});
@@ -55,7 +59,7 @@ describe("Integration: Init Command", () => {
 
     it("creates IntegrationTestApp_macOS directory", () => {
       expect(
-        fs.existsSync(path.join(macosDir, "IntegrationTestApp_macOS"))
+        fs.existsSync(path.join(macosDir, "IntegrationTestApp_macOS")),
       ).toBe(true);
     });
 
@@ -81,7 +85,7 @@ describe("Integration: Init Command", () => {
 
     it("contains correct bundle identifier", () => {
       expect(projectYml).toContain(
-        "PRODUCT_BUNDLE_IDENTIFIER: com.test.integration"
+        "PRODUCT_BUNDLE_IDENTIFIER: com.test.integration",
       );
     });
 
@@ -95,7 +99,7 @@ describe("Integration: Init Command", () => {
 
     it("contains category build setting", () => {
       expect(projectYml).toContain(
-        "INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.developer-tools"
+        "INFOPLIST_KEY_LSApplicationCategoryType: public.app-category.developer-tools",
       );
     });
 
@@ -116,35 +120,38 @@ describe("Integration: Init Command", () => {
       expect(projectYml).toContain("sdk: CoreBluetooth.framework");
     });
 
-    it("contains resources copyFiles section", () => {
+    it("contains resources copyFiles as source with buildPhase", () => {
+      expect(projectYml).toContain("path: ../../resources/data.json");
+      expect(projectYml).toContain("buildPhase:");
       expect(projectYml).toContain("copyFiles:");
       expect(projectYml).toContain("destination: resources");
-      expect(projectYml).toContain("path: resources/data.json");
     });
 
     it("contains resources with custom destination (CustomDir)", () => {
+      expect(projectYml).toContain("path: ../../resources/subdir/nested.txt");
       expect(projectYml).toContain("subpath: CustomDir");
-      expect(projectYml).toContain("path: resources/subdir/nested.txt");
     });
 
     it("contains files copyFiles for SharedSupport", () => {
+      expect(projectYml).toContain("path: ../../files/support-file.txt");
       expect(projectYml).toContain("destination: sharedSupport");
-      expect(projectYml).toContain("path: files/support-file.txt");
     });
 
-    it("contains files copyFiles for MacOS executables", () => {
+    it("contains executables as embedded dependency with code signing", () => {
+      expect(projectYml).toContain("framework: ../../files/helper-binary");
+      expect(projectYml).toContain("embed: true");
+      expect(projectYml).toContain("codeSign: true");
       expect(projectYml).toContain("destination: executables");
-      expect(projectYml).toContain("path: files/helper-binary");
     });
 
-    it("contains files copyFiles for PlugIns", () => {
+    it("contains plugins as embedded dependency with code signing", () => {
+      expect(projectYml).toContain("framework: ../../files/plugin.bundle");
       expect(projectYml).toContain("destination: plugins");
-      expect(projectYml).toContain("path: files/plugin.bundle");
     });
 
-    it("contains frameworks copyFiles for embedded dylib", () => {
-      expect(projectYml).toContain("destination: frameworks");
-      expect(projectYml).toContain("path: frameworks/TestLib.dylib");
+    it("contains dylib as embedded dependency", () => {
+      expect(projectYml).toContain("framework: ../../frameworks/TestLib.dylib");
+      expect(projectYml).toContain("embed: true");
     });
 
     it("contains custom Info.plist keys merged", () => {
@@ -165,7 +172,7 @@ describe("Integration: Init Command", () => {
       entitlementsPath = path.join(
         macosDir,
         "IntegrationTestApp_macOS",
-        "IntegrationTestApp_macOS.entitlements"
+        "IntegrationTestApp_macOS.entitlements",
       );
       if (fs.existsSync(entitlementsPath)) {
         entitlementsContent = fs.readFileSync(entitlementsPath, "utf8");
@@ -178,20 +185,20 @@ describe("Integration: Init Command", () => {
 
     it("contains app-sandbox set to false", () => {
       expect(entitlementsContent).toContain(
-        "<key>com.apple.security.app-sandbox</key>"
+        "<key>com.apple.security.app-sandbox</key>",
       );
       expect(entitlementsContent).toContain("<false/>");
     });
 
     it("contains network.client entitlement", () => {
       expect(entitlementsContent).toContain(
-        "<key>com.apple.security.network.client</key>"
+        "<key>com.apple.security.network.client</key>",
       );
     });
 
     it("contains files.user-selected.read-write entitlement", () => {
       expect(entitlementsContent).toContain(
-        "<key>com.apple.security.files.user-selected.read-write</key>"
+        "<key>com.apple.security.files.user-selected.read-write</key>",
       );
     });
   });
@@ -218,11 +225,11 @@ describe("Integration: Init Command", () => {
     it("build scripts contain Generated by header", () => {
       const shScript = fs.readFileSync(
         path.join(macosDir, "scripts", "build-rust.sh"),
-        "utf8"
+        "utf8",
       );
       const swiftScript = fs.readFileSync(
         path.join(macosDir, "scripts", "build.swift"),
-        "utf8"
+        "utf8",
       );
 
       expect(shScript).toContain("Generated by tauri-macos-xcode");
@@ -249,7 +256,7 @@ describe("Integration: Init Command", () => {
       const appiconsetPath = path.join(
         macosDir,
         "Assets.xcassets",
-        "AppIcon.appiconset"
+        "AppIcon.appiconset",
       );
       expect(fs.existsSync(appiconsetPath)).toBe(true);
     });
@@ -259,7 +266,7 @@ describe("Integration: Init Command", () => {
         macosDir,
         "Assets.xcassets",
         "AppIcon.appiconset",
-        "Contents.json"
+        "Contents.json",
       );
       expect(fs.existsSync(contentsJsonPath)).toBe(true);
 
@@ -275,7 +282,7 @@ describe("Integration: Init Command", () => {
           macosDir,
           "Assets.xcassets",
           "AppIcon.appiconset",
-          filename
+          filename,
         );
         expect(fs.existsSync(iconPath)).toBe(true);
       });
@@ -312,7 +319,7 @@ describe("Integration: Init Command", () => {
     beforeAll(() => {
       gitignoreContent = fs.readFileSync(
         path.join(macosDir, ".gitignore"),
-        "utf8"
+        "utf8",
       );
     });
 
@@ -331,10 +338,7 @@ describe("Integration: Init Command", () => {
 
   describe("XcodeGen execution", { skip: !hasXcodegen }, () => {
     it("creates .xcodeproj directory", () => {
-      const xcodeprojPath = path.join(
-        macosDir,
-        "IntegrationTestApp.xcodeproj"
-      );
+      const xcodeprojPath = path.join(macosDir, "IntegrationTestApp.xcodeproj");
       expect(fs.existsSync(xcodeprojPath)).toBe(true);
     });
 
@@ -342,7 +346,7 @@ describe("Integration: Init Command", () => {
       const pbxprojPath = path.join(
         macosDir,
         "IntegrationTestApp.xcodeproj",
-        "project.pbxproj"
+        "project.pbxproj",
       );
       expect(fs.existsSync(pbxprojPath)).toBe(true);
     });
@@ -353,7 +357,7 @@ describe("Integration: Init Command", () => {
 
     beforeAll(() => {
       pkgContent = JSON.parse(
-        fs.readFileSync(path.join(testDir, "package.json"), "utf8")
+        fs.readFileSync(path.join(testDir, "package.json"), "utf8"),
       );
     });
 
