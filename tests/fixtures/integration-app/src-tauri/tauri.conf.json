@@ -34,8 +34,8 @@
       "icons/icon.ico"
     ],
     "resources": {
-      "resources/data.json": ".",
-      "resources/subdir/nested.txt": "CustomDir/nested.txt",
+      "resources/data.json": "data/",
+      "resources/subdir/nested.txt": "CustomDir/",
       "resources/glob/**/*.json": "globbed"
     },
     "fileAssociations": [

@@ -251,11 +251,12 @@ describe("Integration: Build Command", () => {
     "Resources, files, and frameworks copied",
     { skip: !canRunBuildTests },
     () => {
-      it("copies data.json to Contents/Resources/", () => {
+      it("copies data.json to Contents/Resources/data/", () => {
         const resourcePath = path.join(
           appBundlePath,
           "Contents",
           "Resources",
+          "data",
           "data.json",
         );
         expect(fs.existsSync(resourcePath)).toBe(true);
