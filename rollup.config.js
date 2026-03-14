@@ -14,7 +14,7 @@ export default [
     ],
     external: [
       "commander",
-      "jimp",
+      "image-js",
       "plist",
       "tinyglobby",
       "fs",
@@ -33,7 +33,7 @@ export default [
     plugins: [resolve(), typescript()],
     external: [
       "commander",
-      "jimp",
+      "image-js",
       "plist",
       "tinyglobby",
       "fs",

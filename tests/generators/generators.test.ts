@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import fs from "fs";
 import path from "path";
 import os from "os";
-import { Jimp } from "jimp";
+import { Image, write } from "image-js";
 import { AppInfo } from "../../src/types.js";
 import {
   generateProjectYml,
@@ -17,8 +17,9 @@ async function createTestPng(
   filePath: string,
   size: number = 512,
 ): Promise<void> {
-  const image = new Jimp({ width: size, height: size, color: 0xff0000ff });
-  await image.write(filePath as `${string}.${string}`);
+  const image = new Image(size, size, { colorModel: "RGBA" });
+  image.fill([255, 0, 0, 255]);
+  await write(filePath, image);
 }
 
 describe("generators", () => {
@@ -1095,7 +1096,7 @@ describe("generators", () => {
       const iconsDir = path.join(tempDir, "src-tauri", "icons");
       fs.mkdirSync(iconsDir, { recursive: true });
 
-      // Create an invalid PNG file that jimp cannot process
+      // Create an invalid PNG file that image-js cannot process
       fs.writeFileSync(
         path.join(iconsDir, "icon.png"),
         "not a valid png file content",
