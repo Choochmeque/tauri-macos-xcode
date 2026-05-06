@@ -3,7 +3,7 @@ import fs from "fs";
 import path from "path";
 import os from "os";
 import { execSync, spawnSync } from "child_process";
-import plist from "plist";
+import { parse as parsePlist } from "plist";
 import { init } from "../../src/commands/init.js";
 
 const FIXTURE_PATH = path.join(__dirname, "../fixtures/integration-app");
@@ -197,7 +197,7 @@ describe("Integration: Build Command", () => {
 
       const infoPlistPath = path.join(appBundlePath, "Contents", "Info.plist");
       const content = fs.readFileSync(infoPlistPath, "utf8");
-      infoPlist = plist.parse(content) as Record<string, unknown>;
+      infoPlist = parsePlist(content) as Record<string, unknown>;
     });
 
     it("has correct CFBundleIdentifier", () => {
