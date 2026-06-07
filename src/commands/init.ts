@@ -54,7 +54,9 @@ export async function init(options: InitOptions): Promise<void> {
 
   // Generate files
   generateProjectYml(macosDir, appInfo, projectRoot);
-  await generateAssets(macosDir, appInfo, projectRoot);
+  await generateAssets(macosDir, appInfo, projectRoot, {
+    applyAppleMask: options.applyAppleMask,
+  });
   generateBuildScript(macosDir);
   generatePodfile(macosDir, appInfo);
 

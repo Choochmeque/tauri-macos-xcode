@@ -17,6 +17,10 @@ program
   .command("init")
   .description("Initialize macOS Xcode project")
   .option("-p, --path <path>", "Path to Tauri project root")
+  .option(
+    "--apply-apple-mask",
+    "Apply Apple's macOS icon guidelines (squircle mask + padding) to the source icon",
+  )
   .action(async (options) => {
     try {
       await init(options);

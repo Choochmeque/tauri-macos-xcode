@@ -67,6 +67,7 @@ export interface AppInfo {
 
 export interface InitOptions {
   path?: string;
+  applyAppleMask?: boolean;
 }
 
 export interface DevOptions {
