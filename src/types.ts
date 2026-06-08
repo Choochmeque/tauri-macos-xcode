@@ -68,6 +68,7 @@ export interface AppInfo {
 export interface InitOptions {
   path?: string;
   applyAppleMask?: boolean;
+  skipIcons?: boolean;
 }
 
 export interface DevOptions {

@@ -25,6 +25,7 @@ const SQUIRCLE_EXPONENT = 5;
 
 export interface AssetOptions {
   applyAppleMask?: boolean;
+  skipIcons?: boolean;
 }
 
 function compositeCentered(canvas: Image, source: Image): void {
@@ -131,7 +132,15 @@ export async function generateAssets(
   const assetsDir = path.join(macosDir, "Assets.xcassets");
   const iconsetDir = path.join(assetsDir, "AppIcon.appiconset");
 
-  // Ensure directories exist
+  if (options.skipIcons) {
+    // Ensure Assets.xcassets exists (XcodeGen references it as a source) but
+    // don't touch its contents — preserves any user-managed catalog and
+    // iconset Contents.json.
+    fs.mkdirSync(assetsDir, { recursive: true });
+    console.log("  Skipping icon generation (--skip-icons)");
+    return;
+  }
+
   fs.mkdirSync(iconsetDir, { recursive: true });
 
   // Generate Contents.json for the asset catalog

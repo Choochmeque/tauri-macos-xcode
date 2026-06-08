@@ -80,7 +80,7 @@ src-tauri/gen/apple-macos/
 ### `init`
 
 ```bash
-npx @choochmeque/tauri-macos-xcode init [--path <project-path>] [--apply-apple-mask]
+npx @choochmeque/tauri-macos-xcode init [--path <project-path>] [--apply-apple-mask] [--skip-icons]
 ```
 
 Creates the Xcode project structure and generates the `.xcodeproj` using XcodeGen.
@@ -88,6 +88,7 @@ Creates the Xcode project structure and generates the `.xcodeproj` using XcodeGe
 Flags:
 - `--path <project-path>` — Path to the Tauri project root (defaults to auto-detect).
 - `--apply-apple-mask` — Apply Apple's macOS icon guidelines to the source icon: scales artwork to 824/1024 of the canvas and clips to a squircle. Use this only if your source icon is a raw image without padding or rounded corners; if it's already pre-formatted to Apple's spec, leave it off to avoid double-masking.
+- `--skip-icons` — Skip app icon generation. The `Assets.xcassets` directory is created (so XcodeGen can build the project) but its contents are left untouched — no PNGs and no `Contents.json` files are written. Useful when you've hand-crafted the asset catalog and don't want it overwritten on re-init.
 
 ### `dev`
 
@@ -130,6 +131,12 @@ Required sizes:
 - 128x128, 128x128@2x
 - 256x256, 256x256@2x
 - 512x512, 512x512@2x
+
+### Apple icon mask (`--apply-apple-mask`)
+
+By default the source icon is resized to each required size as-is. If your icon is a raw image without padding or rounded corners, pass `--apply-apple-mask` to apply Apple's macOS Big Sur+ icon geometry: the artwork is scaled to 824/1024 of the canvas, centered, and clipped to a squircle (superellipse approximation). The mask is rendered once at 1024×1024 and downscaled to each required size.
+
+Skip the flag if your source icon is already formatted to Apple's spec — otherwise the padding and corner rounding will be applied twice.
 
 ## Debugging Rust Code
 

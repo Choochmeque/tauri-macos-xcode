@@ -21,6 +21,10 @@ program
     "--apply-apple-mask",
     "Apply Apple's macOS icon guidelines (squircle mask + padding) to the source icon",
   )
+  .option(
+    "--skip-icons",
+    "Skip app icon generation; preserves any existing icons in Assets.xcassets/AppIcon.appiconset",
+  )
   .action(async (options) => {
     try {
       await init(options);
