@@ -1,5 +1,6 @@
 import path from "path";
 import fs from "fs";
+import { createRequire } from "module";
 import {
   findProjectRoot,
   readTauriConfig,
@@ -14,13 +15,30 @@ import { generatePodfile } from "../generators/podfile.js";
 import { runXcodeGen } from "../core/xcodegen.js";
 import { InitOptions } from "../types.js";
 
+const require_ = createRequire(import.meta.url);
+
+// Resolve our own package.json: bundled at dist/index.js (../package.json),
+// or loaded from src/commands/init.ts (../../package.json) during tests.
+function readOwnVersion(): string {
+  for (const candidate of ["../package.json", "../../package.json"]) {
+    try {
+      const pkg = require_(candidate);
+      if (pkg?.name === "@choochmeque/tauri-macos-xcode") return pkg.version;
+    } catch {
+      // try next
+    }
+  }
+  return "0.1.0";
+}
+
 function updatePackageJson(projectRoot: string): void {
   const pkgPath = path.join(projectRoot, "package.json");
   const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf8"));
 
   // Add devDependency
   pkg.devDependencies = pkg.devDependencies || {};
-  pkg.devDependencies["@choochmeque/tauri-macos-xcode"] = "^0.1.0";
+  pkg.devDependencies["@choochmeque/tauri-macos-xcode"] =
+    `^${readOwnVersion()}`;
 
   // Add script
   pkg.scripts = pkg.scripts || {};

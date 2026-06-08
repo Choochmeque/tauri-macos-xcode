@@ -152,8 +152,11 @@ describe("init command", () => {
     const pkgPath = path.join(tempDir, "package.json");
     const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf8"));
     expect(pkg.scripts["tauri:macos:dev"]).toBe("tauri-macos-xcode dev --open");
+    const ownPkg = JSON.parse(
+      fs.readFileSync(path.join(__dirname, "../../package.json"), "utf8"),
+    );
     expect(pkg.devDependencies["@choochmeque/tauri-macos-xcode"]).toBe(
-      "^0.1.0",
+      `^${ownPkg.version}`,
     );
   });
 
