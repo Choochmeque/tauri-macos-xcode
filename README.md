@@ -80,10 +80,14 @@ src-tauri/gen/apple-macos/
 ### `init`
 
 ```bash
-npx @choochmeque/tauri-macos-xcode init [--path <project-path>]
+npx @choochmeque/tauri-macos-xcode init [--path <project-path>] [--apply-apple-mask]
 ```
 
 Creates the Xcode project structure and generates the `.xcodeproj` using XcodeGen.
+
+Flags:
+- `--path <project-path>` — Path to the Tauri project root (defaults to auto-detect).
+- `--apply-apple-mask` — Apply Apple's macOS icon guidelines to the source icon: scales artwork to 824/1024 of the canvas and clips to a squircle. Use this only if your source icon is a raw image without padding or rounded corners; if it's already pre-formatted to Apple's spec, leave it off to avoid double-masking.
 
 ### `dev`
 
