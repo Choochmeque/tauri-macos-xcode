@@ -43,6 +43,7 @@ struct BuildEnvironment {
     let executablePath: String
     let executableFolderPath: String
     let productBundleIdentifier: String
+    let runner: String
 
     var isRelease: Bool {
         configuration.lowercased() == "release"
@@ -61,8 +62,20 @@ struct BuildEnvironment {
             builtProductsDir: ProcessInfo.processInfo.environment["BUILT_PRODUCTS_DIR"] ?? "",
             executablePath: ProcessInfo.processInfo.environment["EXECUTABLE_PATH"] ?? "",
             executableFolderPath: ProcessInfo.processInfo.environment["EXECUTABLE_FOLDER_PATH"] ?? "",
-            productBundleIdentifier: ProcessInfo.processInfo.environment["PRODUCT_BUNDLE_IDENTIFIER"] ?? ""
+            productBundleIdentifier: ProcessInfo.processInfo.environment["PRODUCT_BUNDLE_IDENTIFIER"] ?? "",
+            runner: ProcessInfo.processInfo.environment["TAURI_RUNNER"] ?? "cargo"
         )
+    }
+}
+
+// MARK: - Tauri CLI Runner
+
+// Returns the argv prefix for invoking the Tauri CLI, plus whether the runner
+// requires an extra `--` before forwarded args (npm's `npm run <script> -- <args>`).
+func tauriInvocation(runner: String) -> (argv: [String], needsDashDash: Bool) {
+    switch runner {
+    case "npm": return (["npm", "run", "tauri"], true)
+    default:    return ([runner, "tauri"], false)
     }
 }
 
@@ -260,10 +273,12 @@ func runCargo(args: [String], env: BuildEnvironment) -> Bool {
     return process.terminationStatus == 0
 }
 
-func checkTauriCli() -> Bool {
+func checkTauriCli(env: BuildEnvironment) -> Bool {
+    let (prefix, _) = tauriInvocation(runner: env.runner)
     let process = Process()
     process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
-    process.arguments = ["cargo", "tauri", "--version"]
+    process.arguments = prefix + ["--version"]
+    process.currentDirectoryURL = URL(fileURLWithPath: env.projectRoot)
     process.standardOutput = FileHandle.nullDevice
     process.standardError = FileHandle.nullDevice
 
@@ -301,10 +316,16 @@ func processOutputLine(_ line: String, decoder: JSONDecoder, projectRoot: String
 }
 
 func runCargoTauri(args: [String], env: BuildEnvironment) -> Bool {
+    let (prefix, needsDashDash) = tauriInvocation(runner: env.runner)
+    // Tauri needs a `--` to forward `--message-format` to cargo.
+    // npm needs an additional leading `--` to stop npm from eating the flag.
+    let forwarded: [String] = needsDashDash
+        ? ["--", "--", "--message-format=json"]
+        : ["--", "--message-format=json"]
+
     let process = Process()
     process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
-    // Use -- to pass --message-format to cargo
-    process.arguments = ["cargo", "tauri"] + args + ["--", "--message-format=json"]
+    process.arguments = prefix + args + forwarded
     process.currentDirectoryURL = URL(fileURLWithPath: env.projectRoot)
 
     var environment = ProcessInfo.processInfo.environment
@@ -376,8 +397,8 @@ func buildTarget(_ target: String, env: BuildEnvironment) -> Bool {
 
     if env.isRelease {
         // Check for tauri-cli
-        if !checkTauriCli() {
-            xcodeError("tauri-cli is required for release builds. Install it with: cargo install tauri-cli")
+        if !checkTauriCli(env: env) {
+            xcodeError("Tauri CLI not found via runner '\(env.runner)'. For runner=cargo install with: cargo install tauri-cli. For npm/pnpm/yarn/bun add @tauri-apps/cli to the project.")
             return false
         }
 

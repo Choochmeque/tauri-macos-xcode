@@ -93,6 +93,10 @@ describe("Integration: Init Command", () => {
       expect(projectYml).toContain('macOS: "13.0"');
     });
 
+    it("contains TAURI_RUNNER build setting defaulting to cargo", () => {
+      expect(projectYml).toContain("TAURI_RUNNER: cargo");
+    });
+
     it("contains correct marketing version", () => {
       expect(projectYml).toContain("MARKETING_VERSION: 1.2.3");
     });

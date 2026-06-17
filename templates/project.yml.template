@@ -11,6 +11,7 @@ configs:
 settings:
   base:
     DEAD_CODE_STRIPPING: YES
+    TAURI_RUNNER: cargo
 settingGroups:
   app:
     base:

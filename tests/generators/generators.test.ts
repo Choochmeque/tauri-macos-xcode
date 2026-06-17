@@ -59,6 +59,15 @@ describe("generators", () => {
       expect(content).toContain("com.test.testapp");
     });
 
+    it("project.yml defines TAURI_RUNNER build setting defaulting to cargo", () => {
+      generateProjectYml(tempDir, mockAppInfo);
+      const content = fs.readFileSync(
+        path.join(tempDir, "project.yml"),
+        "utf8",
+      );
+      expect(content).toContain("TAURI_RUNNER: cargo");
+    });
+
     it("project.yml includes category when specified with Apple UTI", () => {
       const appInfoWithCategory = {
         ...mockAppInfo,

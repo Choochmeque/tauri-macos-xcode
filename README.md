@@ -116,6 +116,25 @@ The tool reads configuration from your `tauri.conf.json`:
 - `bundle.macOS.entitlements` - Custom entitlements file path
 - `bundle.macOS.infoPlist` - Custom Info.plist to merge
 
+### Selecting a Tauri CLI runner
+
+Release/Archive builds invoke the Tauri CLI from inside Xcode. The generated `project.yml` defines a `TAURI_RUNNER` build setting (default `cargo`) that controls which executable is used. The Swift build script reads it from the environment and constructs the command accordingly.
+
+Supported values:
+
+| Runner | Invocation | Requires |
+|---|---|---|
+| `cargo` (default) | `cargo tauri build --no-bundle …` | `cargo install tauri-cli` |
+| `pnpm` | `pnpm tauri build --no-bundle …` | `@tauri-apps/cli` in the project |
+| `npm` | `npm run tauri build -- --no-bundle …` | `@tauri-apps/cli` and a `"tauri": "tauri"` script in package.json |
+| `yarn` | `yarn tauri build --no-bundle …` | `@tauri-apps/cli` in the project |
+| `bun` | `bun tauri build --no-bundle …` | `@tauri-apps/cli` in the project |
+| any other | `<value> tauri …` | An executable accepting `tauri` as a subcommand |
+
+Change it in Xcode (Project → Build Settings → search "TAURI_RUNNER"), or override per build from the terminal: `xcodebuild … TAURI_RUNNER=pnpm`.
+
+`TAURI_RUNNER` only affects release/archive (which invokes `tauri build`) and the tauri-cli precheck. Debug builds always run plain `cargo build` — they don't invoke the Tauri CLI.
+
 ## App Icons
 
 Icons are automatically generated from your Tauri icons during `init`. The tool looks for:
