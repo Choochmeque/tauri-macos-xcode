@@ -1,6 +1,6 @@
 {
   "name": "@choochmeque/tauri-macos-xcode",
-  "version": "0.2.29",
+  "version": "0.2.30",
   "description": "Generate Xcode project for macOS Tauri apps",
   "type": "module",
   "bin": {
