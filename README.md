@@ -18,7 +18,7 @@ Generate Xcode projects for macOS Tauri apps. Similar to `tauri ios init` but fo
 - [XcodeGen](https://github.com/yonaskolb/XcodeGen) - `brew install xcodegen`
 - Xcode
 - A Tauri v2 project
-- [tauri-cli](https://tauri.app/start/prerequisites/#rust) - `cargo install tauri-cli` (required for Archive/Release builds)
+- A Tauri CLI for Archive/Release builds — either [`cargo-tauri-cli`](https://tauri.app/start/prerequisites/#rust) (`cargo install tauri-cli`, the default) or [`@tauri-apps/cli`](https://www.npmjs.com/package/@tauri-apps/cli) if you set `TAURI_RUNNER` to a Node package manager (see [Selecting a Tauri CLI runner](#selecting-a-tauri-cli-runner))
 
 ## Usage
 
@@ -71,7 +71,7 @@ src-tauri/gen/apple-macos/
 2. The app connects to your frontend dev server (configured in `tauri.conf.json`)
 
 **Release/Archive builds** (Product → Archive):
-1. Xcode runs `cargo tauri build --no-bundle` which builds frontend and embeds it into the binary
+1. Xcode invokes the Tauri CLI via the `TAURI_RUNNER` build setting (default: `cargo tauri build --no-bundle`; see [Selecting a Tauri CLI runner](#selecting-a-tauri-cli-runner)) which builds the frontend and embeds it into the binary
 2. The app is self-contained and doesn't need a dev server
 3. Ready for distribution via App Store or direct download
 
@@ -120,7 +120,7 @@ The tool reads configuration from your `tauri.conf.json`:
 
 Release/Archive builds invoke the Tauri CLI from inside Xcode. The generated `project.yml` defines a `TAURI_RUNNER` build setting (default `cargo`) that controls which executable is used. The Swift build script reads it from the environment and constructs the command accordingly.
 
-Supported values:
+Supported values (strictly validated — anything else fails the build with a clear error):
 
 | Runner | Invocation | Requires |
 |---|---|---|
@@ -129,7 +129,6 @@ Supported values:
 | `npm` | `npm run tauri build -- --no-bundle …` | `@tauri-apps/cli` and a `"tauri": "tauri"` script in package.json |
 | `yarn` | `yarn tauri build --no-bundle …` | `@tauri-apps/cli` in the project |
 | `bun` | `bun tauri build --no-bundle …` | `@tauri-apps/cli` in the project |
-| any other | `<value> tauri …` | An executable accepting `tauri` as a subcommand |
 
 Change it in Xcode (Project → Build Settings → search "TAURI_RUNNER"), or override per build from the terminal: `xcodebuild … TAURI_RUNNER=pnpm`.
 

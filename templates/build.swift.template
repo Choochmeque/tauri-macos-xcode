@@ -70,6 +70,8 @@ struct BuildEnvironment {
 
 // MARK: - Tauri CLI Runner
 
+let supportedRunners = ["cargo", "pnpm", "npm", "yarn", "bun"]
+
 // Returns the argv prefix for invoking the Tauri CLI, plus whether the runner
 // requires an extra `--` before forwarded args (npm's `npm run <script> -- <args>`).
 func tauriInvocation(runner: String) -> (argv: [String], needsDashDash: Bool) {
@@ -461,6 +463,12 @@ func main() -> Int32 {
     }
 
     let env = BuildEnvironment.fromEnvironment(configuration: args[1], archs: args[2])
+
+    // Validate runner
+    if !supportedRunners.contains(env.runner) {
+        xcodeError("Unsupported TAURI_RUNNER '\(env.runner)'. Supported values: \(supportedRunners.joined(separator: ", "))")
+        return 1
+    }
 
     // Validate bundle identifier matches tauri.conf.json
     if !validateBundleIdentifier(env: env) {
