@@ -457,38 +457,34 @@ describe("Integration: Build Command", () => {
   });
 
   describe("TAURI_RUNNER validation", { skip: !canRunBuildTests }, () => {
-    it(
-      "fails with clear error when TAURI_RUNNER is not in the allowlist",
-      () => {
-        const result = spawnSync(
-          "xcodebuild",
-          [
-            "-project",
-            "IntegrationTestApp.xcodeproj",
-            "-scheme",
-            "IntegrationTestApp_macOS",
-            "-configuration",
-            "Debug",
-            "ARCHS=arm64",
-            "ONLY_ACTIVE_ARCH=YES",
-            "TAURI_RUNNER=bogus-runner",
-            "build",
-          ],
-          {
-            cwd: macosDir,
-            stdio: "pipe",
-            encoding: "utf8",
-            timeout: 180000,
-          },
-        );
+    it("fails with clear error when TAURI_RUNNER is not in the allowlist", () => {
+      const result = spawnSync(
+        "xcodebuild",
+        [
+          "-project",
+          "IntegrationTestApp.xcodeproj",
+          "-scheme",
+          "IntegrationTestApp_macOS",
+          "-configuration",
+          "Debug",
+          "ARCHS=arm64",
+          "ONLY_ACTIVE_ARCH=YES",
+          "TAURI_RUNNER=bogus-runner",
+          "build",
+        ],
+        {
+          cwd: macosDir,
+          stdio: "pipe",
+          encoding: "utf8",
+          timeout: 180000,
+        },
+      );
 
-        expect(result.status).not.toBe(0);
-        const combined = (result.stdout || "") + (result.stderr || "");
-        expect(combined).toContain("Unsupported TAURI_RUNNER");
-        expect(combined).toContain("bogus-runner");
-        expect(combined).toContain("cargo, pnpm, npm, yarn, bun");
-      },
-      200000,
-    );
+      expect(result.status).not.toBe(0);
+      const combined = (result.stdout || "") + (result.stderr || "");
+      expect(combined).toContain("Unsupported TAURI_RUNNER");
+      expect(combined).toContain("bogus-runner");
+      expect(combined).toContain("cargo, pnpm, npm, yarn, bun");
+    }, 200000);
   });
 });
