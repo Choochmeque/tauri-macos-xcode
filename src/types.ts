@@ -28,11 +28,7 @@ export interface ResourceMapping {
 
 // File association types matching Tauri's schema
 export type BundleTypeRole =
-  | "Editor"
-  | "Viewer"
-  | "Shell"
-  | "QLGenerator"
-  | "None";
+  "Editor" | "Viewer" | "Shell" | "QLGenerator" | "None";
 export type HandlerRank = "Default" | "Owner" | "Alternate" | "None";
 
 export interface ExportedFileAssociation {
