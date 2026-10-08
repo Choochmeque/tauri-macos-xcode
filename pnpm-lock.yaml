@@ -16,7 +16,7 @@ importers:
         version: 15.0.0
       image-js:
         specifier: ^1.6.1
-        version: 1.7.0
+        version: 1.7.1
       plist:
         specifier: ^5.0.0
         version: 5.0.0
@@ -754,8 +754,8 @@ packages:
     resolution: {integrity: sha512-YovQ3rzhaLMIrDjNDMkNS01tea93qhEhG5xy8f6+R0l+dw3Ki+5sCoIoI942iuLZTHWogWktgwVDhU09iNEimQ==}
     engines: {node: 20 || >=22}
 
-  bresenham-zingl@0.2.5:
-    resolution: {integrity: sha512-0TCrPvavRM/3Os9QIUDhe8jpAQXgEYjsVO+9IKnkC8cdzorDX5fMRfr3neEFGjcfRItEswHvIvPrqQzCalRYkw==}
+  bresenham-zingl@0.2.8:
+    resolution: {integrity: sha512-AaC4k7+pHgbzlK4fb+l3/fXJd1CbQwhqE5oIoLaknVojyXQv79einSR+fWLR1yCJWOh46v+lLsFRMxHlea8Q5A==}
 
   cacheable@2.5.0:
     resolution: {integrity: sha512-60cyAOytib/OzBw1JNSoSV/boK1AtHryDIjvVBk7XbN4ugfkM3+Sry7fEjNgPMGgOjuaZPAp8ruZ0Cxafwyq9g==}
@@ -764,8 +764,8 @@ packages:
     resolution: {integrity: sha512-NUPRluOfOiTKBKvWPtSD4PhFvWCqOi0BGStNWs57X9js7XGTprSmFoz5F0tWhR4WPjNeR9jXqdC7/UpSJTnlRg==}
     engines: {node: '>=18'}
 
-  cheminfo-types@1.15.0:
-    resolution: {integrity: sha512-shv45WN2u0yN9EHH1bisNrv+fy4Cw+eLM5lOoriP67mePrwbHZ1kJqg90C8GEU7K1A8gJsicEoVZHcuBbuul/w==}
+  cheminfo-types@1.16.0:
+    resolution: {integrity: sha512-j0MiXFnLRVEZg3vUr7SXm6F3HuDNVE5arfQyDMiy1w2fAcuOs3QRgVsw7aOIACvr0aqbvn85cucwt+yOu64IiQ==}
 
   colord@2.10.0:
     resolution: {integrity: sha512-AidJptpBJmjTclAp9BkLwJi0T93fo5epJnbaZslpg6QVzpHjAiveF55mE9AcUJiGMqRHgMDY8soMsQtuNYMHfw==}
@@ -919,8 +919,8 @@ packages:
   flatted@3.4.4:
     resolution: {integrity: sha512-5+ybhBZANEJxaH3X5evAFatUxLfEHSr7n6kYJ+1Qd0mUqr4eu9gIf6GDbWHf8RJijHrjjO8G+la14SlL2SeS1Q==}
 
-  follow-redirects@1.16.0:
-    resolution: {integrity: sha512-y5rN/uOsadFT/JfYwhxRS5R7Qce+g3zG97+JrtFZlC9klX/W5hD7iiLzScI4nZqUS7DNUdhPgw4xI8W2LuXlUw==}
+  follow-redirects@1.16.1:
+    resolution: {integrity: sha512-FNvFGzoMLWmE6Yj9spb/zjd7yiNCHiAW9/Tg9CXrQ8wuu32HtlJOwWO11OJafl5FfY3DxTdQ0vj42zU1kvv5jg==}
     engines: {node: '>=4.0'}
     peerDependencies:
       debug: '*'
@@ -973,8 +973,8 @@ packages:
     resolution: {integrity: sha512-/8UvqAPU9DGTI9k4mxtf49U37Isfwr8Uts96+SBHIkFxPJnHS0Ew4f00sM4Scd8V8EjM0jUNtVDdv1kPdt35lg==}
     engines: {node: '>= 4'}
 
-  image-js@1.7.0:
-    resolution: {integrity: sha512-/i72uwbYaSetVaLYPi3lHqr71/4O5RqWkEq4h/p5DM3FR0SSe5Jj57u6xk6sMVOurDBmTrvbm+FeinKnqLwIMA==}
+  image-js@1.7.1:
+    resolution: {integrity: sha512-n8/psrUfO7v7wBjTY2OMhj2OND24T6COvBoXNFCYI5HWq4QTToZWP34yFU2Dy5ESajp8BbmjdHjxMqEoj8cBPg==}
 
   image-type@4.1.0:
     resolution: {integrity: sha512-CFJMJ8QK8lJvRlTCEgarL4ro6hfDQKif2HjSvYCdQZESaIPV4v9imrf7BQHK+sQeTeNeMpWciR9hyC/g8ybXEg==}
@@ -1154,8 +1154,8 @@ packages:
   ml-convolution@2.0.0:
     resolution: {integrity: sha512-ExW6zVmN2YGuyO3aBiS1ymybme3nVgv2ccCfynSdgtW5sNp4DOHnfow4K/ErTDMQ1s9tINjv7kvzjnVhQHXJBA==}
 
-  ml-matrix@6.13.0:
-    resolution: {integrity: sha512-QpV0UTUkglg6vPUgThKGBEtit2ac6habSoZ33bwI9rU0UHZLqw6G3ukTIE8zWiUF3sjK8YAlhx/o/b9layzH8A==}
+  ml-matrix@6.15.0:
+    resolution: {integrity: sha512-wFa1v6KP8bKp+fj0nYmRs1Pb5K4zRkXGKsOvLinvILENFIADncm4XlOI+S1M7yuACMGfI6cfk0IifDgd4j5xmw==}
 
   ml-random@0.5.0:
     resolution: {integrity: sha512-zLJBmNb34LOz+vN6BD8l3aYm/VWYWbmAunrLMPs4dHf4gTl8BWlhil72j56HubPg86zrXioIs4qoHq7Topy6tw==}
@@ -1172,8 +1172,8 @@ packages:
   ml-regression-polynomial-2d@1.0.0:
     resolution: {integrity: sha512-r34kaawZKMwjORIdzpa/o5fnjlTXkkaLJ3B4vvFNeKlvEGPtApqFxbDRmw07e2CjUH2MhGIChpMeXp/XB3Iogg==}
 
-  ml-spectra-processing@14.29.2:
-    resolution: {integrity: sha512-5ZKp8lMAJeBMH0bP+BLmw+OLvneK8KA3GwPwc4DpWgJkX/iBFlvQhgmsMUMPV8quKs0uNJUi0aVnbUVBl1RFQQ==}
+  ml-spectra-processing@14.35.1:
+    resolution: {integrity: sha512-yxTB9YpgNmo53U+c2tG1/uKKUl+CNO3hlp+3utuBlhAqDw3AD9c78gI+1rYz+sykOXV76QtAXuAhFZFZjMvgDw==}
 
   ml-xsadd@2.0.0:
     resolution: {integrity: sha512-VoAYUqmPRmzKbbqRejjqceGFp3VF81Qe8XXFGU0UXLxB7Mf4GGvyGq5Qn3k4AiQgDEV6WzobqlPOd+j0+m6IrA==}
@@ -2046,7 +2046,7 @@ snapshots:
     dependencies:
       balanced-match: 4.0.4
 
-  bresenham-zingl@0.2.5: {}
+  bresenham-zingl@0.2.8: {}
 
   cacheable@2.5.0:
     dependencies:
@@ -2058,7 +2058,7 @@ snapshots:
 
   chai@6.2.2: {}
 
-  cheminfo-types@1.15.0: {}
+  cheminfo-types@1.16.0: {}
 
   colord@2.10.0: {}
 
@@ -2236,7 +2236,7 @@ snapshots:
 
   flatted@3.4.4: {}
 
-  follow-redirects@1.16.0:
+  follow-redirects@1.16.1:
     optional: true
 
   fsevents@2.3.3:
@@ -2276,9 +2276,9 @@ snapshots:
 
   ignore@7.0.12: {}
 
-  image-js@1.7.0:
+  image-js@1.7.1:
     dependencies:
-      bresenham-zingl: 0.2.5
+      bresenham-zingl: 0.2.8
       colord: 2.10.0
       fast-bmp: 4.0.1
       fast-jpeg: 3.0.1
@@ -2289,11 +2289,11 @@ snapshots:
       median-quickselect: 1.0.1
       ml-affine-transform: 1.0.3
       ml-convolution: 2.0.0
-      ml-matrix: 6.13.0
+      ml-matrix: 6.15.0
       ml-ransac: 1.0.0
       ml-regression-multivariate-linear: 2.0.4
       ml-regression-polynomial-2d: 1.0.0
-      ml-spectra-processing: 14.29.2
+      ml-spectra-processing: 14.35.1
       robust-point-in-polygon: 1.0.3
       ssim.js: 3.5.0
       tiff: 7.1.3
@@ -2438,7 +2438,7 @@ snapshots:
 
   ml-affine-transform@1.0.3:
     dependencies:
-      ml-matrix: 6.13.0
+      ml-matrix: 6.15.0
 
   ml-array-max@2.0.0:
     dependencies:
@@ -2464,7 +2464,7 @@ snapshots:
       fft.js: 4.0.4
       next-power-of-two: 1.0.0
 
-  ml-matrix@6.13.0:
+  ml-matrix@6.15.0:
     dependencies:
       is-any-array: 3.0.0
       ml-array-rescale: 2.0.0
@@ -2476,32 +2476,32 @@ snapshots:
   ml-ransac@1.0.0:
     dependencies:
       ml-array-median: 1.1.6
-      ml-matrix: 6.13.0
+      ml-matrix: 6.15.0
       ml-random: 0.5.0
 
   ml-regression-base@4.0.1:
     dependencies:
-      cheminfo-types: 1.15.0
+      cheminfo-types: 1.16.0
       is-any-array: 3.0.0
 
   ml-regression-multivariate-linear@2.0.4:
     dependencies:
-      ml-matrix: 6.13.0
+      ml-matrix: 6.15.0
 
   ml-regression-polynomial-2d@1.0.0:
     dependencies:
-      cheminfo-types: 1.15.0
+      cheminfo-types: 1.16.0
       is-any-array: 2.0.1
-      ml-matrix: 6.13.0
+      ml-matrix: 6.15.0
       ml-regression-base: 4.0.1
 
-  ml-spectra-processing@14.29.2:
+  ml-spectra-processing@14.35.1:
     dependencies:
       binary-search: 1.3.6
-      cheminfo-types: 1.15.0
+      cheminfo-types: 1.16.0
       fft.js: 4.0.4
       is-any-array: 3.0.0
-      ml-matrix: 6.13.0
+      ml-matrix: 6.15.0
       ml-xsadd: 3.0.1
 
   ml-xsadd@2.0.0: {}
@@ -2668,7 +2668,7 @@ snapshots:
   skia-canvas@3.0.8:
     dependencies:
       detect-libc: 2.1.2
-      follow-redirects: 1.16.0
+      follow-redirects: 1.16.1
       https-proxy-agent: 7.0.6
       string-split-by: 1.0.0
     transitivePeerDependencies:
