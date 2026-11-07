@@ -96,7 +96,12 @@ describe("Integration: Build Command", () => {
     );
 
     if (buildResult.status !== 0) {
+      // The generated build.swift reports cargo/lipo failures on stdout, so keep its tail too.
       console.error("xcodebuild failed:", buildResult.stderr);
+      console.error(
+        "xcodebuild stdout (tail):",
+        buildResult.stdout.split("\n").slice(-80).join("\n"),
+      );
       throw new Error(`xcodebuild failed with status ${buildResult.status}`);
     }
 
