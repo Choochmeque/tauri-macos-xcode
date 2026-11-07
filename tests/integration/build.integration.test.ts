@@ -96,11 +96,18 @@ describe("Integration: Build Command", () => {
     );
 
     if (buildResult.status !== 0) {
-      // The generated build.swift reports cargo/lipo failures on stdout, so keep its tail too.
+      // The generated build.swift reports cargo/lipo failures on stdout; keep everything from the
+      // Rust build phase onwards (its environment dump alone runs to hundreds of lines).
+      const out = buildResult.stdout;
+      const phase = out.lastIndexOf(
+        "PhaseScriptExecution Build\\ and\\ Copy\\ Rust\\ Binary",
+      );
+      const tail =
+        phase >= 0 ? out.slice(phase) : out.split("\n").slice(-200).join("\n");
       console.error("xcodebuild failed:", buildResult.stderr);
       console.error(
-        "xcodebuild stdout (tail):",
-        buildResult.stdout.split("\n").slice(-80).join("\n"),
+        "xcodebuild stdout from the Rust phase:",
+        tail.replace(/^\s*export .*$/gm, "").replace(/\n{2,}/g, "\n"),
       );
       throw new Error(`xcodebuild failed with status ${buildResult.status}`);
     }
